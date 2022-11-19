@@ -17,4 +17,6 @@ public interface FilmStorage {
     Film removeLikeFromUserById(Integer filmId, Integer userId);
 
     List<Film> getMostPopularFilmByCountLikes(Integer count);
+
+    List<Film> findCommon(int userId, int friendsId);
 }

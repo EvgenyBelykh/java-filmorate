@@ -18,6 +18,7 @@ public class FilmService {
     private final UserService userService;
     private final FilmStorage filmStorage;
 
+
     @Autowired
     public FilmService(UserService userService, @Qualifier("daoFilmStorage") FilmStorage filmStorage){
         this.userService = userService;
@@ -58,6 +59,13 @@ public class FilmService {
     }
     public UserService getUserService() {
         return userService;
+    }
+
+    public List<Film> findCommon (int userId, int friendId){
+        List<Film> common = filmStorage.findCommon(userId, friendId);
+        common.sort((o1, o2) -> o2.getLikes().size() - o1.getLikes().size());
+
+                return common;
     }
 
 }

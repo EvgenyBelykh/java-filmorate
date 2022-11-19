@@ -98,6 +98,12 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .limit(count)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Film> findCommon (int userId, int friendId){
+        return new ArrayList<>(films.values());
+    }
+
     private int compare(Film p0, Film p1) {
         return p1.getLikes().size() - p0.getLikes().size();
     }
