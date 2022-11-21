@@ -42,4 +42,5 @@ public class Film {
     private int rate;
     private Mpa mpa;
     private List<Genre> genres;
+    private List<Director> directors;
 }

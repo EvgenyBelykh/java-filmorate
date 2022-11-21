@@ -92,12 +92,24 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public List<Film> searchFilms(String substring, String by) {
+        // TODO
+        return null;
+    }
+
+    @Override
     public List<Film> getMostPopularFilmByCountLikes(Integer count) {
         return getFilms().stream()
                 .sorted(this::compare)
                 .limit(count)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Film> getSortedFilmByDirector(Integer id, String sortBy) {
+        return null;
+    }
+
     private int compare(Film p0, Film p1) {
         return p1.getLikes().size() - p0.getLikes().size();
     }

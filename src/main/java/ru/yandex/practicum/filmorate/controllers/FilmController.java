@@ -9,6 +9,9 @@ import ru.yandex.practicum.filmorate.models.Film;
 import ru.yandex.practicum.filmorate.services.FilmService;
 
 import javax.validation.Valid;
+
+import static org.mockito.ArgumentMatchers.nullable;
+
 import java.util.List;
 
 @RestController
@@ -66,5 +69,19 @@ public class FilmController {
             throw new IncorrectParameterException("count");
         }
         return filmService.getMostPopularFilmByCountLikes(count);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getSortedFilmByDirector(
+            @PathVariable("directorId") Integer directorId,
+            @RequestParam(value = "sortBy") String sortBy) {
+        return filmService.getSortedFilmByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public List<Film> searchFilms(@RequestParam(name = "query") String query,
+                                  @RequestParam(name = "by") String by)
+                                  throws IllegalArgumentException {
+        return filmService.searchFilm(query, by);
     }
 }
