@@ -18,13 +18,10 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 public class Film {
-
     private int id;
-
     @NotBlank
     @NotNull(message = "Неверные данные: имя пустое или содержит только пробелы")
     private String name;
-
     @Size(max=200,
             message = "Неверные данные: Описание больше 200 символов")
     private String description;
