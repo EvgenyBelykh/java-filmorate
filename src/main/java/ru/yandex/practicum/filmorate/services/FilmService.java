@@ -60,4 +60,11 @@ public class FilmService {
         return userService;
     }
 
+    public List<Film> getSortedFilmByDirector(Integer directorId, String sortBy) {
+        return filmStorage.getSortedFilmByDirector(directorId, sortBy);
+    }
+
+    public List<Film> searchFilm(String substring, String by) throws IllegalArgumentException {
+        return filmStorage.searchFilms(substring, by);
+    }
 }

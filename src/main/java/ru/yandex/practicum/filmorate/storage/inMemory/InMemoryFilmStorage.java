@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.ValidationConditionException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationFilmByIdException;
+import ru.yandex.practicum.filmorate.models.Director;
 import ru.yandex.practicum.filmorate.models.Film;
 import ru.yandex.practicum.filmorate.storage.interf.FilmStorage;
 
@@ -91,6 +92,58 @@ public class InMemoryFilmStorage implements FilmStorage {
         return film;
     }
 
+    private List<Film> getFilmsByDirectors(Collection<Film> films, String substring) {
+        List<Film> result = new ArrayList<>();
+
+        for (Film film : films) {
+            for (Director director : film.getDirectors()) {
+                if (director.getName().contains(substring)) {
+                    result.add(film);
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private List<Film> getFilmsByName(Collection<Film> films, String substring) {
+        List<Film> result = new ArrayList<>();
+
+        for (Film film : films) {
+            if (film.getName().contains(substring)) {
+                result.add(film);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<Film> searchFilms(String substring, String by) {
+        Set<Film> result = new HashSet<>();
+
+        switch (by) {
+            case "director":
+                result.addAll(getFilmsByDirectors(films.values(), substring));
+                break;
+            case "title":
+                result.addAll(getFilmsByName(films.values(), substring));
+                break;
+            case "director,title":
+            case "title,director":
+                result.addAll(getFilmsByDirectors(films.values(), substring));
+                result.addAll(getFilmsByName(films.values(), substring));
+                break;
+            default:
+                throw new IllegalArgumentException("Wrong request param.");
+        }
+
+        List<Film> toReturn = new ArrayList<>(result);
+        toReturn.sort(Comparator.comparingInt(film -> film.getLikes().size()));
+        return toReturn;
+    }
+
     @Override
     public List<Film> getMostPopularFilmByCountLikes(Integer count) {
         return getFilms().stream()
@@ -98,6 +151,12 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .limit(count)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Film> getSortedFilmByDirector(Integer id, String sortBy) {
+        return null;
+    }
+
     private int compare(Film p0, Film p1) {
         return p1.getLikes().size() - p0.getLikes().size();
     }

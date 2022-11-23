@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import ru.yandex.practicum.filmorate.validators.DateReleaseConstraint;
-
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -28,7 +27,6 @@ public class Film {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @DateReleaseConstraint
     private LocalDate releaseDate;
-
     @Min(value = 0
             , message = "Неверные данные: Длительность меньше 0")
     private int duration;
@@ -37,5 +35,6 @@ public class Film {
 
     private int rate;
     private Mpa mpa;
+    private List<Director> directors;
     private List<Genre> genres;
 }

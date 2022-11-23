@@ -9,15 +9,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.models.Film;
-import ru.yandex.practicum.filmorate.models.Genre;
-import ru.yandex.practicum.filmorate.models.Mpa;
-import ru.yandex.practicum.filmorate.models.User;
+import ru.yandex.practicum.filmorate.models.*;
+import ru.yandex.practicum.filmorate.storage.daoImpl.DaoDirectorStorage;
 import ru.yandex.practicum.filmorate.storage.daoImpl.DaoFilmStorage;
 import ru.yandex.practicum.filmorate.storage.daoImpl.DaoUserStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,6 +28,7 @@ public class FilmControllerWithDaoTest {
     private final JdbcTemplate jdbcTemplate;
     private final DaoFilmStorage filmStorage;
     private final DaoUserStorage userStorage;
+    private final DaoDirectorStorage directorStorage;
     Film firstFilm;
     Film secondFilm;
     Film thirdFilm;
@@ -68,10 +68,12 @@ public class FilmControllerWithDaoTest {
         jdbcTemplate.update("DELETE FROM USERS");
         jdbcTemplate.update("DELETE FROM FILMS");
         jdbcTemplate.update("DELETE FROM LIKES");
+        jdbcTemplate.update("DELETE FROM DIRECTORS");
         jdbcTemplate.update("DELETE FROM USERS_FRIENDS");
         jdbcTemplate.update("DELETE FROM FILM_GENRES");
         jdbcTemplate.update("ALTER TABLE USERS ALTER COLUMN ID RESTART WITH 1");
         jdbcTemplate.update("ALTER TABLE FILMS ALTER COLUMN ID RESTART WITH 1");
+        jdbcTemplate.update("ALTER TABLE DIRECTORS ALTER COLUMN ID RESTART WITH 1");
     }
 
     @Test
@@ -226,7 +228,7 @@ public class FilmControllerWithDaoTest {
 
         assertEquals(userStorage.getUserById(1).getLogin()
                 , userStorage.getUserById(new ArrayList<>(filmStorage.getFilmById(1).getLikes()).get(0)).getLogin()
-        , "Неверный список лайков" );
+                , "Неверный список лайков" );
     }
     @Test
     public void removeLikeFromUserByIdTest() {
@@ -321,5 +323,216 @@ public class FilmControllerWithDaoTest {
         assertEquals(filmStorage.getMostPopularFilmByCountLikes(1).size(), 1);
         assertEquals(filmStorage.getMostPopularFilmByCountLikes(10).size(), 3);
         assertEquals(filmStorage.getMostPopularFilmByCountLikes(10).size(), 3);
+    }
+
+    @Test
+    public void getSortedFilmByDirectorTest() {
+        Director director = Director.builder()
+                .id(1)
+                .name("ДжеймсКамерун")
+                .build();
+        List<Director> listDirector = new ArrayList<>();
+        listDirector.add(director);
+        directorStorage.addDirector(director);
+
+        User firstUser = User.builder()
+                .email("jim@email.com")
+                .login("Jim")
+                .name("Джим")
+                .birthday(LocalDate.of(1962, 1, 17))
+                .build();
+
+        User secondUser = User.builder()
+                .email("jeff@email.com")
+                .login("Jeff")
+                .name("Джефф")
+                .birthday(LocalDate.of(1955, 2, 19))
+                .build();
+
+        User thirdUser = User.builder()
+                .email("Diaz@email.com")
+                .login("Cameron")
+                .name("Кэмерон")
+                .birthday(LocalDate.of(1972, 8, 30))
+                .build();
+
+        firstFilm = Film.builder()
+                .id(1)
+                .description("Описание")
+                .releaseDate(LocalDate.of(1993, 1, 28))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .directors(listDirector)
+                .build();
+
+        secondFilm = Film.builder()
+                .description("Описание")
+                .releaseDate(LocalDate.of(1994, 12, 6))
+                .duration(107)
+                .name("Тупой и еще тупее")
+                .mpa(listMpa.get(1))
+                .directors(listDirector)
+                .build();
+
+        thirdFilm = Film.builder()
+                .description("Описание")
+                .releaseDate(LocalDate.of(2004, 3, 9))
+                .duration(108)
+                .name("Вечное сияние чистого разума")
+                .mpa(listMpa.get(1))
+                .directors(listDirector)
+                .build();
+
+        filmStorage.addFilm(firstFilm);
+        filmStorage.addFilm(secondFilm);
+        filmStorage.addFilm(thirdFilm);
+
+        userStorage.addUser(firstUser);
+        userStorage.addUser(secondUser);
+        userStorage.addUser(thirdUser);
+
+        filmStorage.addLikeFromUserById(2, 1);
+        filmStorage.addLikeFromUserById(2, 2);
+        filmStorage.addLikeFromUserById(2, 3);
+
+        filmStorage.addLikeFromUserById(3, 1);
+        filmStorage.addLikeFromUserById(3, 2);
+
+        filmStorage.addLikeFromUserById(1, 1);
+
+        assertEquals(filmStorage.getSortedFilmByDirector(1, "likes"), List.of(filmStorage.getFilmById(2),
+                filmStorage.getFilmById(3), filmStorage.getFilmById(1)));
+        assertEquals(filmStorage.getSortedFilmByDirector(1, "year"), List.of(filmStorage.getFilmById(1),
+                filmStorage.getFilmById(2), filmStorage.getFilmById(3)));
+    }
+
+    @Test
+    public void returnEmptyListIfNoSuchFilms() {
+        List<Film> list1 = filmStorage.searchFilms("string", "director");
+        List<Film> list2 = filmStorage.searchFilms("string", "title");
+        List<Film> list3 = filmStorage.searchFilms("string", "director,title");
+        List<Film> list4 = filmStorage.searchFilms("string", "title,director");
+
+        assertTrue(list1.isEmpty());
+        assertTrue(list2.isEmpty());
+        assertTrue(list3.isEmpty());
+        assertTrue(list4.isEmpty());
+    }
+
+    @Test
+    public void throwExceptionIfWrongRequestParam() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            filmStorage.searchFilms("string", "param");
+        });
+
+        assertEquals("Wrong request param.", exception.getMessage());
+    }
+
+    @Test
+    public void returnFilmIfFilmContainSubstringInName() {
+        firstFilm = Film.builder()
+                .id(1)
+                .description("Описание")
+                .releaseDate(LocalDate.of(1993, 1, 28))
+                .duration(101)
+                .name("Halt and catch fire")
+                .likes(new HashSet<>())
+                .directors(new ArrayList<>())
+                .genres(new ArrayList<>())
+                .mpa(listMpa.get(1))
+                .build();
+
+        filmStorage.addFilm(firstFilm);
+        List<Film> result = filmStorage.searchFilms("catch", "title");
+
+        assertTrue(result.contains(firstFilm));
+    }
+
+    @Test
+    public void returnFilmIfDirectorNameContainSubstring() {
+        Director director = Director.builder()
+                .id(1)
+                .name("ДжеймсКамерун")
+                .build();
+        List<Director> listDirector = new ArrayList<>();
+        listDirector.add(director);
+        directorStorage.addDirector(director);
+
+        firstFilm = Film.builder()
+                .id(1)
+                .description("Описание")
+                .releaseDate(LocalDate.of(1993, 1, 28))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .likes(new HashSet<>())
+                .genres(new ArrayList<>())
+                .directors(listDirector)
+                .build();
+
+        filmStorage.addFilm(firstFilm);
+        List<Film> result = filmStorage.searchFilms("ДжеймсКамерун", "director");
+
+        assertTrue(result.contains(firstFilm));
+    }
+
+    @Test
+    public void returnFilmIfAtLeastOneFieldContainsSubstring() {
+        Director director = Director.builder()
+                .id(1)
+                .name("ДжеймсКамерун")
+                .build();
+        List<Director> listDirector = new ArrayList<>();
+        listDirector.add(director);
+        directorStorage.addDirector(director);
+
+        firstFilm = Film.builder()
+                .id(1)
+                .description("Описание")
+                .releaseDate(LocalDate.of(1993, 1, 28))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .likes(new HashSet<>())
+                .genres(new ArrayList<>())
+                .directors(listDirector)
+                .build();
+
+        filmStorage.addFilm(firstFilm);
+        List<Film> result1 = filmStorage.searchFilms("ДжеймсКамерун", "director,title");
+        List<Film> result2 = filmStorage.searchFilms("Маска", "title,director");
+
+        assertEquals(result1, result2);
+        assertTrue(result1.contains(firstFilm));
+        assertTrue(result2.contains(firstFilm));
+    }
+
+    @Test
+    public void returnFilmIfBothFieldsContainSubstring() {
+        Director director = Director.builder()
+                .id(1)
+                .name("ДжеймсКамерун")
+                .build();
+        List<Director> listDirector = new ArrayList<>();
+        listDirector.add(director);
+        directorStorage.addDirector(director);
+
+        firstFilm = Film.builder()
+                .id(1)
+                .description("Описание")
+                .releaseDate(LocalDate.of(1993, 1, 28))
+                .duration(101)
+                .name("ДжеймсКамерун")
+                .mpa(listMpa.get(1))
+                .likes(new HashSet<>())
+                .genres(new ArrayList<>())
+                .directors(listDirector)
+                .build();
+
+        filmStorage.addFilm(firstFilm);
+        List<Film> result = filmStorage.searchFilms("Джеймс", "director,title");
+
+        assertTrue(result.contains(firstFilm));
     }
 }
