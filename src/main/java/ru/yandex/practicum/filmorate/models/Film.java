@@ -18,6 +18,7 @@ import java.util.Set;
 @Builder
 public class Film {
     private int id;
+    
     @NotBlank
     @NotNull(message = "Неверные данные: имя пустое или содержит только пробелы")
     private String name;
