@@ -143,7 +143,7 @@ public class DaoFilmStorage implements FilmStorage {
     @Override
     public Film removeLikeFromUserById(Integer filmId, Integer userId) {
         String sqlQuery = "DELETE " +
-                "FROM likes " +
+                "FROM rate " +
                 "WHERE id_user = ? AND id_film = ? ";
 
         jdbcTemplate.update(sqlQuery, userId, filmId);
@@ -156,9 +156,9 @@ public class DaoFilmStorage implements FilmStorage {
             //запрос популярных фильмов по лайкам все годов и жанров
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
-                    "LEFT JOIN likes ON likes.id_film = films.id " +
+                    "LEFT JOIN rate ON rate.id_film = films.id " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(likes.id_user) DESC " +
+                    "ORDER BY COUNT(rate.id_user) DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, this::mapRowToFilms, cnt);
 
@@ -166,12 +166,12 @@ public class DaoFilmStorage implements FilmStorage {
             //запрос популярных фильмов по лайкам конкретного года и жанра
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
-                    "LEFT JOIN likes ON likes.id_film = films.id " +
+                    "LEFT JOIN rate ON rate.id_film = films.id " +
                     "LEFT JOIN film_genres ON film_genres.id_film = films.id " +
                     "WHERE EXTRACT (YEAR FROM films.release_date ) = ? " +
                     "AND film_genres.id_genre = ? " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(likes.id_user) DESC " +
+                    "ORDER BY COUNT(rate.id_user) DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, this::mapRowToFilms, String.valueOf(year), genreId, cnt);
 
@@ -179,10 +179,10 @@ public class DaoFilmStorage implements FilmStorage {
             //запрос популярных фильмов по лайкам конкретного года
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
-                    "LEFT JOIN likes ON likes.id_film = films.id " +
+                    "LEFT JOIN rate ON rate.id_film = films.id " +
                     "WHERE EXTRACT (YEAR FROM films.release_date ) = ? " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(likes.id_user) DESC " +
+                    "ORDER BY COUNT(rate.id_user) DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery,this::mapRowToFilms, String.valueOf(year), cnt);
 
@@ -190,11 +190,11 @@ public class DaoFilmStorage implements FilmStorage {
             //запрос популярных фильмов по лайкам конкретного жанра
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
-                    "LEFT JOIN likes ON likes.id_film = films.id " +
+                    "LEFT JOIN rate ON rate.id_film = films.id " +
                     "LEFT JOIN film_genres ON film_genres.id_film = films.id " +
                     "WHERE film_genres.id_genre = ? " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(likes.id_user) DESC " +
+                    "ORDER BY COUNT(rate.id_user) DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery,this::mapRowToFilms, genreId, cnt);
 
@@ -205,7 +205,7 @@ public class DaoFilmStorage implements FilmStorage {
     public List<Film> findCommon(int userId, int friendsId){
         String sqlQuery = " SELECT films.* " +
                 "FROM films " +
-                "WHERE films.id IN (SELECT DISTINCT id_film FROM likes WHERE id_user = ? AND ?)";
+                "WHERE films.id IN (SELECT DISTINCT id_film FROM rate WHERE id_user = ? AND ?)";
         return jdbcTemplate.query(sqlQuery, this::mapRowToFilms, userId, friendsId);
     }
 
@@ -222,11 +222,11 @@ public class DaoFilmStorage implements FilmStorage {
         if (sortBy.equals("likes")) {
             String sqlQuery = "SELECT FILMS.* " +
                     "FROM FILMS " +
-                    "LEFT JOIN LIKES ON LIKES.ID_FILM = FILMS.ID " +
+                    "LEFT JOIN rate ON rate.ID_FILM = FILMS.ID " +
                     "LEFT JOIN FILM_DIRECTORS ON FILM_DIRECTORS.ID_FILM = films.ID " +
                     "WHERE ID_DIRECTOR = ? " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(likes.id_user) DESC ";
+                    "ORDER BY COUNT(rate.id_user) DESC ";
             films = jdbcTemplate.query(sqlQuery, this::mapRowToFilms, directorId);
         } else if (sortBy.equals("year")) {
             String sqlQuery = "SELECT FILMS.* " +
@@ -259,7 +259,7 @@ public class DaoFilmStorage implements FilmStorage {
                 "WHERE id IN" +
                 "( " +
                 "SELECT id_user " +
-                "FROM likes " +
+                "FROM rate " +
                 "WHERE id_film IN" +
                 "(" +
                 "SELECT id_film " +
@@ -302,7 +302,7 @@ public class DaoFilmStorage implements FilmStorage {
                     "FROM films AS f " +
                     "LEFT OUTER JOIN film_directors AS fd ON f.id = fd.id_film " +
                     "LEFT OUTER JOIN directors AS d ON fd.id_director = d.id " +
-                    "LEFT JOIN likes AS l ON f.id = l.id_film " +
+                    "LEFT JOIN rate AS l ON f.id = l.id_film " +
                     "WHERE " + getInsertString(substring, by) + " " +
                     "GROUP BY f.id, l.id_user " +
                     "ORDER BY COUNT(l.id_user) DESC;";
