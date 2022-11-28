@@ -4,11 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.EmptyResultFromDataBaseException;
+import ru.yandex.practicum.filmorate.mapper.GenreRowMapper;
 import ru.yandex.practicum.filmorate.models.Film;
 import ru.yandex.practicum.filmorate.models.Genre;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 
 @Component
@@ -24,7 +23,7 @@ public class DaoGenreStorage {
         String sqlQuery = "SELECT * " +
                 "FROM genres ";
 
-        return jdbcTemplate.query(sqlQuery, this::mapRowToGenre);
+        return jdbcTemplate.query(sqlQuery, new GenreRowMapper());
     }
     public Genre getGenreById(Integer id) {
         String sqlQuery = "SELECT * " +
@@ -33,7 +32,7 @@ public class DaoGenreStorage {
         Genre genre;
 
         try {
-            genre = jdbcTemplate.queryForObject(sqlQuery, this::mapRowToGenre, id);
+            genre = jdbcTemplate.queryForObject(sqlQuery, new GenreRowMapper(), id);
             return genre;
         } catch (Exception e) {
             log.info("Genre c id: {} не найден ", id);
@@ -75,12 +74,6 @@ public class DaoGenreStorage {
                 "WHERE id_film = ?" +
                 ")";
 
-        return jdbcTemplate.query(sqlQuery, this::mapRowToGenre, id);
-    }
-    private Genre mapRowToGenre(ResultSet resultSet, int i) throws SQLException {
-        return Genre.builder()
-                .id(resultSet.getInt("id"))
-                .name(resultSet.getString("name"))
-                .build();
+        return jdbcTemplate.query(sqlQuery, new GenreRowMapper(), id);
     }
 }

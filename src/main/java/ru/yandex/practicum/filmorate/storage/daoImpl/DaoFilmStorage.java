@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.models.Film;
 import ru.yandex.practicum.filmorate.services.DirectorService;
 import ru.yandex.practicum.filmorate.services.GenreService;
@@ -42,7 +43,7 @@ public class DaoFilmStorage implements FilmStorage {
         String sqlQuery = "SELECT * " +
                 "FROM films";
 
-        return jdbcTemplate.query(sqlQuery, this::mapRowToFilms);
+        return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate));
     }
 
     @Override
@@ -52,7 +53,7 @@ public class DaoFilmStorage implements FilmStorage {
                     "FROM films " +
                     "WHERE id = ?";
 
-            return jdbcTemplate.queryForObject(sqlQuery, this::mapRowToFilms, filmId);
+            return jdbcTemplate.queryForObject(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), filmId);
         } catch (Exception e) {
             log.info("Фильм c id {} не содержится в базе ", filmId);
             throw new ValidationException("Фильм c id: " + filmId + " не содержится в базе");
@@ -133,7 +134,7 @@ public class DaoFilmStorage implements FilmStorage {
 
     @Override
     public Film addLikeFromUserById(Integer filmId, Integer userId) {
-        String sqlQuery = "INSERT INTO likes(id_user, id_film) " +
+        String sqlQuery = "INSERT INTO rate(id_user, id_film) " +
                 "VALUES(?, ?)";
 
         jdbcTemplate.update(sqlQuery, userId, filmId);
@@ -152,7 +153,7 @@ public class DaoFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> getMostPopularFilmByCountLikes(Integer cnt, Integer genreId, Year year) {
-        if(genreId == null && year == null){
+        if (genreId == null && year == null) {
             //запрос популярных фильмов по лайкам все годов и жанров
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
@@ -160,9 +161,9 @@ public class DaoFilmStorage implements FilmStorage {
                     "GROUP BY films.id " +
                     "ORDER BY COUNT(rate.id_user) DESC " +
                     "LIMIT ?;";
-            return jdbcTemplate.query(sqlQuery, this::mapRowToFilms, cnt);
+            return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), cnt);
 
-        } else if(genreId != null && year != null){
+        } else if (genreId != null && year != null) {
             //запрос популярных фильмов по лайкам конкретного года и жанра
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
@@ -173,9 +174,9 @@ public class DaoFilmStorage implements FilmStorage {
                     "GROUP BY films.id " +
                     "ORDER BY COUNT(rate.id_user) DESC " +
                     "LIMIT ?;";
-            return jdbcTemplate.query(sqlQuery, this::mapRowToFilms, String.valueOf(year), genreId, cnt);
+            return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), String.valueOf(year), genreId, cnt);
 
-        } else if (genreId == null){
+        } else if (genreId == null) {
             //запрос популярных фильмов по лайкам конкретного года
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
@@ -184,7 +185,7 @@ public class DaoFilmStorage implements FilmStorage {
                     "GROUP BY films.id " +
                     "ORDER BY COUNT(rate.id_user) DESC " +
                     "LIMIT ?;";
-            return jdbcTemplate.query(sqlQuery,this::mapRowToFilms, String.valueOf(year), cnt);
+            return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), String.valueOf(year), cnt);
 
         } else {
             //запрос популярных фильмов по лайкам конкретного жанра
@@ -196,17 +197,17 @@ public class DaoFilmStorage implements FilmStorage {
                     "GROUP BY films.id " +
                     "ORDER BY COUNT(rate.id_user) DESC " +
                     "LIMIT ?;";
-            return jdbcTemplate.query(sqlQuery,this::mapRowToFilms, genreId, cnt);
+            return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), genreId, cnt);
 
         }
     }
 
     @Override
-    public List<Film> findCommon(int userId, int friendsId){
+    public List<Film> findCommon(int userId, int friendsId) {
         String sqlQuery = " SELECT films.* " +
                 "FROM films " +
                 "WHERE films.id IN (SELECT DISTINCT id_film FROM rate WHERE id_user = ? AND ?)";
-        return jdbcTemplate.query(sqlQuery, this::mapRowToFilms, userId, friendsId);
+        return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), userId, friendsId);
     }
 
 
@@ -227,32 +228,18 @@ public class DaoFilmStorage implements FilmStorage {
                     "WHERE ID_DIRECTOR = ? " +
                     "GROUP BY films.id " +
                     "ORDER BY COUNT(rate.id_user) DESC ";
-            films = jdbcTemplate.query(sqlQuery, this::mapRowToFilms, directorId);
+            films = jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), directorId);
         } else if (sortBy.equals("year")) {
             String sqlQuery = "SELECT FILMS.* " +
                     "FROM FILMS " +
                     "LEFT JOIN FILM_DIRECTORS ON FILM_DIRECTORS.ID_FILM = films.ID " +
                     "WHERE ID_DIRECTOR = ? " +
                     "ORDER BY FILMS.RELEASE_DATE ";
-            films = jdbcTemplate.query(sqlQuery, this::mapRowToFilms, directorId);
+            films = jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), directorId);
         }
         return films;
     }
 
-    private Film mapRowToFilms(ResultSet resultSet, int i) throws SQLException {
-        return Film.builder()
-                .id(resultSet.getInt("id"))
-                .name(resultSet.getString("name"))
-                .description(resultSet.getString("description"))
-                .releaseDate(resultSet.getDate("release_date").toLocalDate())
-                .duration(resultSet.getInt("duration"))
-                .likes(new HashSet<>(getLikesFromUserByFilmId(resultSet.getInt("id"))))
-                .rate(resultSet.getInt("rate"))
-                .mpa(mpaService.getMpaById(Integer.valueOf(resultSet.getString("mpa"))))
-                .genres(genreService.getGenresByIdFilm(resultSet.getInt("id")))
-                .directors(directorService.getDirectorsByIdFilm(resultSet.getInt("id")))
-                .build();
-    }
     public List<Integer> getLikesFromUserByFilmId(int id) {
         String sqlQuery = "SELECT id " +
                 "FROM users " +
@@ -272,9 +259,9 @@ public class DaoFilmStorage implements FilmStorage {
     }
 
     private void checkMpaIsNull(PreparedStatement ps, Film film) throws SQLException {
-        if(film.getMpa() != null){
+        if (film.getMpa() != null) {
             ps.setInt(6, film.getMpa().getId());
-        } else if (film.getMpa() == null)  {
+        } else if (film.getMpa() == null) {
             throw new DataIntegrityViolationException("MPA не может быть null");
         } else if (film.getMpa().getId() < 1 || film.getMpa().getId() > 5) {
             throw new ValidationException("Данного рейтинга еще не существует");
@@ -299,14 +286,14 @@ public class DaoFilmStorage implements FilmStorage {
     @Override
     public List<Film> searchFilms(String substring, String by) throws IllegalArgumentException {
         String sql = "SELECT *" +
-                    "FROM films AS f " +
-                    "LEFT OUTER JOIN film_directors AS fd ON f.id = fd.id_film " +
-                    "LEFT OUTER JOIN directors AS d ON fd.id_director = d.id " +
-                    "LEFT JOIN rate AS l ON f.id = l.id_film " +
-                    "WHERE " + getInsertString(substring, by) + " " +
-                    "GROUP BY f.id, l.id_user " +
-                    "ORDER BY COUNT(l.id_user) DESC;";
-        Set<Film> films = new HashSet<>(jdbcTemplate.query(sql, this::mapRowToFilms));
+                "FROM films AS f " +
+                "LEFT OUTER JOIN film_directors AS fd ON f.id = fd.id_film " +
+                "LEFT OUTER JOIN directors AS d ON fd.id_director = d.id " +
+                "LEFT JOIN rate AS l ON f.id = l.id_film " +
+                "WHERE " + getInsertString(substring, by) + " " +
+                "GROUP BY f.id, l.id_user " +
+                "ORDER BY COUNT(l.id_user) DESC;";
+        Set<Film> films = new HashSet<>(jdbcTemplate.query(sql, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate)));
         List<Film> result = new ArrayList<>(films);
         result.sort(Comparator.comparingInt(film -> film.getLikes().size()));
         Collections.reverse(result);

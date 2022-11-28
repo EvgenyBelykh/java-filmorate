@@ -4,11 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.EmptyResultFromDataBaseException;
+import ru.yandex.practicum.filmorate.mapper.MpaRowMapper;
 import ru.yandex.practicum.filmorate.models.Mpa;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
+
 @Component
 @Slf4j
 public class DaoMpaStorage {
@@ -23,7 +23,7 @@ public class DaoMpaStorage {
         String sqlQuery = "SELECT * " +
                 "FROM mpa";
 
-        return jdbcTemplate.query(sqlQuery, this::mapRowToMpa);
+        return jdbcTemplate.query(sqlQuery, new MpaRowMapper());
     }
 
     public Mpa getMpaById(Integer id) {
@@ -32,18 +32,11 @@ public class DaoMpaStorage {
                 "WHERE id = ?";
         try {
             Mpa mpa;
-            mpa = jdbcTemplate.queryForObject(sqlQuery, this::mapRowToMpa, id);
+            mpa = jdbcTemplate.queryForObject(sqlQuery, new MpaRowMapper(), id);
             return mpa;
         } catch (Exception e) {
             log.info("Mpa c id: {} не найден", id);
             throw new EmptyResultFromDataBaseException("Mpa c id: " + id + " не найден");
         }
-    }
-
-    private Mpa mapRowToMpa(ResultSet resultSet, int i) throws SQLException {
-        return Mpa.builder()
-                .id(resultSet.getInt("id"))
-                .name(resultSet.getString("name"))
-                .build();
     }
 }

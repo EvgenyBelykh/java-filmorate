@@ -37,7 +37,7 @@ public class DaoDirectorControllerTest {
     void tearDown() {
         jdbcTemplate.update("DELETE FROM USERS");
         jdbcTemplate.update("DELETE FROM FILMS");
-        jdbcTemplate.update("DELETE FROM LIKES");
+        jdbcTemplate.update("DELETE FROM RATE");
         jdbcTemplate.update("DELETE FROM DIRECTORS");
         jdbcTemplate.update("DELETE FROM USERS_FRIENDS");
         jdbcTemplate.update("DELETE FROM FILM_GENRES");
