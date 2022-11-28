@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.inMemory;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.relational.core.sql.In;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.ValidationConditionException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -73,33 +74,43 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film addLikeFromUserById(Integer filmId, Integer userId) {
-        Film film = films.get(filmId);
-        if(film.getLikes() == null){
-            film.setLikes(new HashSet<>());
-        }
-        film.getLikes().add(userId);
-        films.put(filmId, film);
-
-        log.info("Пользователь с id: {} поставил like фильму: {}", userId, filmId);
-        return film;
+    public Film addRateFromUserById(Integer filmId, Integer userId, Integer rate) {
+//        Film film = films.get(filmId);
+//        if(film.getLikes() == null){
+//            film.setLikes(new HashSet<>());
+//        }
+//        film.getLikes().add(userId);
+//        films.put(filmId, film);
+//
+//        log.info("Пользователь с id: {} поставил like фильму: {}", userId, filmId);
+        return null;
     }
 
     @Override
-    public Film removeLikeFromUserById(Integer filmId, Integer userId) {
-        Film film = films.get(filmId);
-        film.getLikes().remove(userId);
+    public Film updateRateFromUserById(Integer filmId, Integer userId, Integer rate) {
+        return null;
+    }
 
-        log.info("Пользователь с id: {} убрал like фильму: {}", userId, filmId);
-        return film;
+    @Override
+    public Film removeRateFromUserById(Integer filmId, Integer userId) {
+//        Film film = films.get(filmId);
+//        film.getLikes().remove(userId);
+//
+//        log.info("Пользователь с id: {} убрал like фильму: {}", userId, filmId);
+        return null;
+    }
+    @Override
+    public Double getRateFilmById(Integer filmId) {
+        return null;
     }
 
     @Override
     public List<Film> getMostPopularFilmByCountLikes(Integer count, Integer genreId, Year year) {
-        return getFilms().stream()
-                .sorted(this::compare)
-                .limit(count)
-                .collect(Collectors.toList());
+//        return getFilms().stream()
+//                .sorted(this::compare)
+//                .limit(count)
+//                .collect(Collectors.toList());
+        return null;
     }
 
     @Override
@@ -113,9 +124,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         return null;
     }
 
-    private int compare(Film p0, Film p1) {
-        return p1.getLikes().size() - p0.getLikes().size();
-    }
+//    private int compare(Film p0, Film p1) {
+//        return p1.getLikes().size() - p0.getLikes().size();
+//    }
 
     private void CheckOnTheFirstFilm(Film film) {
         if (film.getReleaseDate().isBefore(DATE_FIRST_FILM)) {
@@ -161,26 +172,27 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> searchFilms(String substring, String by) {
-        Set<Film> result = new HashSet<>();
-
-        switch (by) {
-            case "director":
-                result.addAll(getFilmsByDirectors(films.values(), substring));
-                break;
-            case "title":
-                result.addAll(getFilmsByName(films.values(), substring));
-                break;
-            case "director,title":
-            case "title,director":
-                result.addAll(getFilmsByDirectors(films.values(), substring));
-                result.addAll(getFilmsByName(films.values(), substring));
-                break;
-            default:
-                throw new IllegalArgumentException("Wrong request param.");
-        }
-
-        List<Film> toReturn = new ArrayList<>(result);
-        toReturn.sort(Comparator.comparingInt(film -> film.getLikes().size()));
-        return toReturn;
+//        Set<Film> result = new HashSet<>();
+//
+//        switch (by) {
+//            case "director":
+//                result.addAll(getFilmsByDirectors(films.values(), substring));
+//                break;
+//            case "title":
+//                result.addAll(getFilmsByName(films.values(), substring));
+//                break;
+//            case "director,title":
+//            case "title,director":
+//                result.addAll(getFilmsByDirectors(films.values(), substring));
+//                result.addAll(getFilmsByName(films.values(), substring));
+//                break;
+//            default:
+//                throw new IllegalArgumentException("Wrong request param.");
+//        }
+//
+//        List<Film> toReturn = new ArrayList<>(result);
+//        toReturn.sort(Comparator.comparingInt(film -> film.getLikes().size()));
+//        return toReturn;
+        return null;
     }
 }

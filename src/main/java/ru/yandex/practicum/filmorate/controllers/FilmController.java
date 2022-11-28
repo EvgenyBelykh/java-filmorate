@@ -55,16 +55,32 @@ public class FilmController {
     }
 
 
-    @PutMapping("/{id}/like/{userId}")
-    public Film addLikeFromUserById(@PathVariable("id") Integer filmId, @PathVariable("userId") Integer userId) {
-        log.info("Запрос добавления лайка фильму c id: {} от пользователя с id: {}", filmId, userId);
-        return filmService.addLikeFromUserById(filmId, userId);
+    @PostMapping("/{id}/rate/{userId}")
+    public Film addRateFromUserById(@PathVariable("id") Integer filmId
+            , @PathVariable("userId") Integer userId
+            , @RequestParam(value = "rate") Integer rate) {
+        log.info("Запрос добавления рейтинга: {} фильму c id: {} от пользователя с id: {}", rate, filmId, userId);
+        return filmService.addRateFromUserById(filmId, userId, rate);
+    }
+    @PutMapping("/{id}/rate/{userId}")
+    public Film updateRateFromUserById(@PathVariable("id") Integer filmId
+            , @PathVariable("userId") Integer userId
+            , @RequestParam(value = "rate") Integer rate) {
+        log.info("Запрос обновления рейтинга: {} фильму c id: {} от пользователя с id: {}", rate, filmId, userId);
+        return filmService.updateRateFromUserById(filmId, userId, rate);
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
-    public Film removeLikeFromUserById(@PathVariable("id") Integer filmId, @PathVariable("userId") Integer userId) {
-        log.info("Запрос удаления лайка фильму c id: {} от пользователя с id: {}", filmId, userId);
-        return filmService.removeLikeFromUserById(filmId, userId);
+    @DeleteMapping("/{id}/rate/{userId}")
+    public Film removeRateFromUserById(@PathVariable("id") Integer filmId
+            , @PathVariable("userId") Integer userId) {
+        log.info("Запрос удаления рейтинга фильму c id: {} от пользователя с id: {}", filmId, userId);
+
+        return filmService.removeRateFromUserById(filmId, userId);
+    }
+    @GetMapping("/{id}/rate")
+    public Double getRateFilmById(@PathVariable("id") Integer filmId){
+        log.info("Запрос рейтинга фильма с id: {} ", filmId);
+        return filmService.getRateFilmById(filmId);
     }
     @GetMapping("/popular")
     public List<Film> getMostPopularFilmByCountLikes(
