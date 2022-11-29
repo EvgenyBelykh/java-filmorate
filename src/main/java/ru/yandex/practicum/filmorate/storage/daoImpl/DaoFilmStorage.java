@@ -205,11 +205,11 @@ public class DaoFilmStorage implements FilmStorage {
                 , getRateFromTableRate(filmId)
                 , filmId);
     }
-    private Float getRateFromTableRate(Integer filmId) {
+    private Double getRateFromTableRate(Integer filmId) {
             String sqlQueryRate = "SELECT AVG(rate) " +
                     "FROM rate " +
                     "WHERE id_film = ? ";
-            return jdbcTemplate.queryForObject(sqlQueryRate, Float.class, filmId);
+            return jdbcTemplate.queryForObject(sqlQueryRate, Double.class, filmId);
     }
 
     @Override
