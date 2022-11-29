@@ -1,6 +1,6 @@
 # java-filmorate
 Template repository for Filmorate project.
-![diagram](https://github.com/EvgenyBelykh/java-filmorate/blob/main/filmorate%20(9).png)
+![diagram](https://github.com/EvgenyBelykh/java-filmorate/blob/main/filmorate.png)
 
 ## Code from dbdiagram.io:
 
