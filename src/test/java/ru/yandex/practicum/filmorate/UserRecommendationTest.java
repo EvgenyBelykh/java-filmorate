@@ -93,16 +93,16 @@ public class UserRecommendationTest {
 
         //Проверка рекомендаций
 
-        daoFilmStorage.addLikeFromUserById(1, 1);
-        daoFilmStorage.addLikeFromUserById(2, 2);
+//        daoFilmStorage.addOrUpdateRateFromUserById(1, 1);
+//        daoFilmStorage.addOrUpdateRateFromUserById(2, 2);
 
         Optional<List<Film>> emptyRecommendations = Optional.ofNullable(daoUserStorage.getRecommendations(1));
 
         assertThat(emptyRecommendations).isPresent()
                 .hasValueSatisfying(films -> assertThat(films.size()).isEqualTo(0));
 
-        daoFilmStorage.addLikeFromUserById(3, 1);
-        daoFilmStorage.addLikeFromUserById(3, 2);
+//        daoFilmStorage.addOrUpdateRateFromUserById(3, 1);
+//        daoFilmStorage.addOrUpdateRateFromUserById(3, 2);
 
 
         Optional<List<Film>> recommendations = Optional.ofNullable(daoUserStorage.getRecommendations(1));

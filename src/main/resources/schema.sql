@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS films
     description  VARCHAR(256),
     release_date TIMESTAMP,
     duration     INTEGER,
-    rate         INTEGER,
+    rate         DOUBLE,
     mpa          VARCHAR(64),
     CONSTRAINT   length_duration
                  CHECK (duration > 0),
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS rate
 (
     id_user      INTEGER NOT NULL,
     id_film      INTEGER NOT NULL,
-    rate INTEGER,
+    rate         INTEGER,
     CONSTRAINT   rate_id_user FOREIGN KEY (id_user) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT   rate_id_film FOREIGN KEY (id_film) REFERENCES films (id) ON DELETE CASCADE ON UPDATE CASCADE,
     PRIMARY KEY  (id_user, id_film)

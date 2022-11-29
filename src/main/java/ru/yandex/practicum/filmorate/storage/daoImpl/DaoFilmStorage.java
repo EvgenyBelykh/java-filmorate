@@ -62,8 +62,8 @@ public class DaoFilmStorage implements FilmStorage {
 
     @Override
     public Film addFilm(Film film) {
-        String sqlQuery = "INSERT INTO films(name, description, release_date, duration, rate, mpa)" +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        String sqlQuery = "INSERT INTO films(name, description, release_date, duration, mpa)" +
+                "VALUES (?, ?, ?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -72,7 +72,11 @@ public class DaoFilmStorage implements FilmStorage {
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
             ps.setInt(4, film.getDuration());
-            ps.setInt(5, film.getRate());
+            
+            // Ставить рейтинг фильму, который только внесен в базу неверно, рейтинг должны ставить пользователи
+            // ресурса, а не первый, кто добавил фильм в базу.
+            // Если пользователь хочет поставить фильму рейтинг, то он должен послать запрос на добавление рейтинга
+
             checkMpaIsNull(ps, film);
             return ps;
         }, keyHolder);
@@ -88,24 +92,40 @@ public class DaoFilmStorage implements FilmStorage {
 
     @Override
     public Film updateFilm(Film film) {
-        getFilmById(film.getId());
-        String sqlQuery = "UPDATE films SET " +
-                "name = ?, description = ?, release_date = ?, duration = ?, rate = ?, mpa = ? " +
-                "WHERE id = ?";
+        if(!film.getName().equals(checkNameByIdFromDB(film.getId()))){
 
-        jdbcTemplate.update(sqlQuery
-                , film.getName()
-                , film.getDescription()
-                , film.getReleaseDate()
-                , film.getDuration()
-                , film.getRate()
-                , film.getMpa().getId()
-                , film.getId());
+            //Тут сложный момент, если поменять название фильма на совершеннно другой фильм, то по-хорошему надо высчитывать
+            //rate заново, иначе совершенно другому фильму можно поставить рейтинг, который он не заслуживает.
+            //Поэтому менять название фильма лучше запретить. Менять название фильма через поддержку (хотя это несет
+            //бО'льшую нагрузку на техподдержку. Пока оставил так, незнаю как правильно). Я бы вообще запретил обновлять
+            //фильмы. На кинопоиске вроде нельзя менять фильмы (как и добавлять)
 
-        genreService.addOrUpdateFilmGenres(film);
-        directorService.addOrUpdateFilmDirectors(film);
 
-        return getFilmById(film.getId());
+            getFilmById(film.getId());
+            String sqlQuery = "UPDATE films SET " +
+                    "description = ?, release_date = ?, duration = ?, rate = ?, mpa = ? " +
+                    "WHERE id = ?";
+            jdbcTemplate.update(sqlQuery
+                    , film.getDescription()
+                    , film.getReleaseDate()
+                    , film.getDuration()
+                    , getRateFromTableRate(film.getId())
+                    , film.getMpa().getId()
+                    , film.getId());
+
+            genreService.addOrUpdateFilmGenres(film);
+            directorService.addOrUpdateFilmDirectors(film);
+            return getFilmById(film.getId());
+        } else {
+            throw new ValidationException("Не допускается менять название фильма! Обратитесь в техподдержку :)");
+        }
+
+    }
+    private String checkNameByIdFromDB(int filmId) {
+        String sqlQuery = " SELECT name " +
+                "FROM films " +
+                "WHERE id = ? ";
+        return jdbcTemplate.queryForObject(sqlQuery, String.class, filmId);
     }
 
     @Override
@@ -133,22 +153,63 @@ public class DaoFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film addLikeFromUserById(Integer filmId, Integer userId) {
-        String sqlQuery = "INSERT INTO rate(id_user, id_film) " +
-                "VALUES(?, ?)";
+    public Film addRateFromUserById(Integer filmId, Integer userId, Integer rate) {
 
-        jdbcTemplate.update(sqlQuery, userId, filmId);
+        String sqlQueryRate = "INSERT INTO rate(id_user, id_film, rate) " +
+                "VALUES(?, ?, ?)";
+        jdbcTemplate.update(sqlQueryRate, userId, filmId, rate);
+
+        updateRateFilm(filmId);
+
         return getFilmById(filmId);
     }
 
     @Override
-    public Film removeLikeFromUserById(Integer filmId, Integer userId) {
-        String sqlQuery = "DELETE " +
+    public Film updateRateFromUserById(Integer filmId, Integer userId, Integer rate) {
+
+        String sqlQueryRate = "UPDATE rate SET " +
+                "rate = ? " +
+                "WHERE id_user = ? AND id_film = ? " ;
+        jdbcTemplate.update(sqlQueryRate, rate,  userId, filmId);
+
+        updateRateFilm(filmId);
+
+        return getFilmById(filmId);
+    }
+
+    @Override
+    public Film removeRateFromUserById(Integer filmId, Integer userId) {
+
+        String sqlQueryRate = "DELETE " +
                 "FROM rate " +
                 "WHERE id_user = ? AND id_film = ? ";
 
-        jdbcTemplate.update(sqlQuery, userId, filmId);
+        jdbcTemplate.update(sqlQueryRate, userId, filmId);
+
+        updateRateFilm(filmId);
+
         return getFilmById(filmId);
+    }
+    public Double getRateFilmById(Integer filmId) {
+        String sqlQuery = "SELECT rate " +
+                "FROM FILMS " +
+                "WHERE ID = ? ";
+
+        return jdbcTemplate.queryForObject(sqlQuery, Double.class, filmId);
+    }
+    private void updateRateFilm(Integer filmId){
+        String sqlQueryUpdateRateFilm = "UPDATE films SET " +
+                "rate = ? " +
+                "WHERE id = ?";
+        jdbcTemplate.update(sqlQueryUpdateRateFilm
+                , getRateFromTableRate(filmId)
+                , filmId);
+    }
+    private Double getRateFromTableRate(Integer filmId) {
+            String sqlQueryRate = "SELECT AVG(rate) " +
+                    "FROM rate " +
+                    "WHERE id_film = ? ";
+            return jdbcTemplate.queryForObject(sqlQueryRate, Double.class, filmId);
     }
 
     @Override
@@ -240,27 +301,9 @@ public class DaoFilmStorage implements FilmStorage {
         return films;
     }
 
-    public List<Integer> getLikesFromUserByFilmId(int id) {
-        String sqlQuery = "SELECT id " +
-                "FROM users " +
-                "WHERE id IN" +
-                "( " +
-                "SELECT id_user " +
-                "FROM rate " +
-                "WHERE id_film IN" +
-                "(" +
-                "SELECT id_film " +
-                "FROM films " +
-                "WHERE id_film = ?" +
-                ")" +
-                ")";
-
-        return jdbcTemplate.queryForList(sqlQuery, Integer.class, id);
-    }
-
     private void checkMpaIsNull(PreparedStatement ps, Film film) throws SQLException {
         if (film.getMpa() != null) {
-            ps.setInt(6, film.getMpa().getId());
+            ps.setInt(5, film.getMpa().getId());
         } else if (film.getMpa() == null) {
             throw new DataIntegrityViolationException("MPA не может быть null");
         } else if (film.getMpa().getId() < 1 || film.getMpa().getId() > 5) {
@@ -285,18 +328,19 @@ public class DaoFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> searchFilms(String substring, String by) throws IllegalArgumentException {
-        String sql = "SELECT *" +
-                "FROM films AS f " +
-                "LEFT OUTER JOIN film_directors AS fd ON f.id = fd.id_film " +
-                "LEFT OUTER JOIN directors AS d ON fd.id_director = d.id " +
-                "LEFT JOIN rate AS l ON f.id = l.id_film " +
-                "WHERE " + getInsertString(substring, by) + " " +
-                "GROUP BY f.id, l.id_user " +
-                "ORDER BY COUNT(l.id_user) DESC;";
-        Set<Film> films = new HashSet<>(jdbcTemplate.query(sql, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate)));
-        List<Film> result = new ArrayList<>(films);
-        result.sort(Comparator.comparingInt(film -> film.getLikes().size()));
-        Collections.reverse(result);
-        return result;
+//        String sql = "SELECT *" +
+//                "FROM films AS f " +
+//                "LEFT OUTER JOIN film_directors AS fd ON f.id = fd.id_film " +
+//                "LEFT OUTER JOIN directors AS d ON fd.id_director = d.id " +
+//                "LEFT JOIN rate AS l ON f.id = l.id_film " +
+//                "WHERE " + getInsertString(substring, by) + " " +
+//                "GROUP BY f.id, l.id_user " +
+//                "ORDER BY COUNT(l.id_user) DESC;";
+//        Set<Film> films = new HashSet<>(jdbcTemplate.query(sql, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate)));
+//        List<Film> result = new ArrayList<>(films);
+//        result.sort(Comparator.comparingInt(film -> film.getLikes().size()));
+//        Collections.reverse(result);
+//        return result;
+        return null;
     }
 }
