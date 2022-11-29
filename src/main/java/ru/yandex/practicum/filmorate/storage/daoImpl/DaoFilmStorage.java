@@ -92,7 +92,7 @@ public class DaoFilmStorage implements FilmStorage {
 
     @Override
     public Film updateFilm(Film film) {
-        if(!film.getName().equals(checkNameByIdFromDB(film.getId()))){
+        if(film.getName().equals(checkNameByIdFromDB(film.getId()))){
 
             //Тут сложный момент, если поменять название фильма на совершеннно другой фильм, то по-хорошему надо высчитывать
             //rate заново, иначе совершенно другому фильму можно поставить рейтинг, который он не заслуживает.

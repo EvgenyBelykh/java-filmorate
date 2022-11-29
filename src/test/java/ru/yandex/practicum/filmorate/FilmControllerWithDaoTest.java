@@ -124,9 +124,9 @@ public class FilmControllerWithDaoTest {
     @Test
     public void updateFilmTest() {
         firstFilm = Film.builder()
-                .description("Описание")
-                .releaseDate(LocalDate.of(1994, 12, 14))
-                .duration(101)
+                .description("Фильм о двух тупых чувачков") //неверное описание
+                .releaseDate(LocalDate.of(1994, 12, 6)) //неверная дата выхода
+                .duration(107) //неверная длительность фильма
                 .name("Маска")
                 .mpa(listMpa.get(1))
                 .build();
@@ -139,9 +139,25 @@ public class FilmControllerWithDaoTest {
                 .name("Тупой и еще тупее")
                 .mpa(listMpa.get(1))
                 .build();
+
+        thirdFilm = Film.builder()
+                .id(1)
+                .description("Про маску")
+                .releaseDate(LocalDate.of(1994, 12, 14))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .build();
+
         filmStorage.addFilm(firstFilm);
 
         assertThrows(ValidationException.class, () -> filmStorage.updateFilm(secondFilm));
+
+        filmStorage.updateFilm(thirdFilm);
+        assertEquals(thirdFilm.getName(), filmStorage.getFilms().get(0).getName());
+        assertEquals(thirdFilm.getDescription(), filmStorage.getFilms().get(0).getDescription());
+        assertEquals(thirdFilm.getReleaseDate(), filmStorage.getFilms().get(0).getReleaseDate());
+        assertEquals(thirdFilm.getDuration(), filmStorage.getFilms().get(0).getDuration());
     }
 
     @Test
