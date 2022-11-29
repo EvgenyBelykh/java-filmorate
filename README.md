@@ -1,6 +1,6 @@
 # java-filmorate
 Template repository for Filmorate project.
-![diagram](https://github.com/EvgenyBelykh/java-filmorate/blob/main/filmorate.png)
+![diagram](https://github.com/EvgenyBelykh/java-filmorate/blob/replace-likes-to-rate/filmorate.png)
 
 ## Code from dbdiagram.io:
 
