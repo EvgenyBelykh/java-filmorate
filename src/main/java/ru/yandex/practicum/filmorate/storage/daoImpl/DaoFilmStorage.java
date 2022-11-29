@@ -229,9 +229,7 @@ public class DaoFilmStorage implements FilmStorage {
             //запрос популярных фильмов по рейтингу все годов и жанров
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
-                    "LEFT JOIN rate ON rate.id_film = films.id " +
-                    "GROUP BY films.id " +
-                    "ORDER BY AVG(rate.RATE) DESC " +
+                    "ORDER BY FILMS.RATE DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), cnt);
 
@@ -239,12 +237,10 @@ public class DaoFilmStorage implements FilmStorage {
             //запрос популярных фильмов по рейтингу конкретного года и жанра
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
-                    "LEFT JOIN rate ON rate.id_film = films.id " +
                     "LEFT JOIN film_genres ON film_genres.id_film = films.id " +
                     "WHERE EXTRACT (YEAR FROM films.release_date ) = ? " +
                     "AND film_genres.id_genre = ? " +
-                    "GROUP BY films.id " +
-                    "ORDER BY AVG(rate.RATE) DESC " +
+                    "ORDER BY FILMS.RATE DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), String.valueOf(year), genreId, cnt);
 
@@ -252,10 +248,8 @@ public class DaoFilmStorage implements FilmStorage {
             //запрос популярных фильмов по рейтингу конкретного года
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
-                    "LEFT JOIN rate ON rate.id_film = films.id " +
                     "WHERE EXTRACT (YEAR FROM films.release_date ) = ? " +
-                    "GROUP BY films.id " +
-                    "ORDER BY AVG(rate.RATE) DESC " +
+                    "ORDER BY FILMS.RATE DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), String.valueOf(year), cnt);
 
@@ -263,11 +257,9 @@ public class DaoFilmStorage implements FilmStorage {
             //запрос популярных фильмов по рейтингу конкретного жанра
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
-                    "LEFT JOIN rate ON rate.id_film = films.id " +
                     "LEFT JOIN film_genres ON film_genres.id_film = films.id " +
                     "WHERE film_genres.id_genre = ? " +
-                    "GROUP BY films.id " +
-                    "ORDER BY AVG(rate.RATE) DESC " +
+                    "ORDER BY FILMS.RATE DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), genreId, cnt);
 
@@ -295,11 +287,9 @@ public class DaoFilmStorage implements FilmStorage {
         if (sortBy.equals("rates")) {
             String sqlQuery = "SELECT FILMS.* " +
                     "FROM FILMS " +
-                    "LEFT JOIN rate ON rate.ID_FILM = FILMS.ID " +
                     "LEFT JOIN FILM_DIRECTORS ON FILM_DIRECTORS.ID_FILM = films.ID " +
                     "WHERE ID_DIRECTOR = ? " +
-                    "GROUP BY films.id " +
-                    "ORDER BY AVG(rate.RATE) DESC ";
+                    "ORDER BY FILMS.RATE DESC ";
             films = jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), directorId);
         } else if (sortBy.equals("year")) {
             String sqlQuery = "SELECT FILMS.* " +
