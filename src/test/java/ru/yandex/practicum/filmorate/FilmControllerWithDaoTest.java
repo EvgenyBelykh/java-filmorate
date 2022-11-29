@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import ru.yandex.practicum.filmorate.exceptions.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.models.*;
 import ru.yandex.practicum.filmorate.storage.daoImpl.DaoDirectorStorage;
@@ -251,6 +252,52 @@ public class FilmControllerWithDaoTest {
         );
         assertEquals("Фильм c id: 3 не содержится в базе"
                 , exception.getMessage());
+    }
+    @Test
+    public void addWrongRateFromUserByIdTest() {
+        firstFilm = Film.builder()
+                .description("Описание")
+                .releaseDate(LocalDate.of(1994, 12, 14))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .build();
+        filmStorage.addFilm(firstFilm);
+
+        User firstUser = User.builder()
+                .email("jim@email.com")
+                .login("Jim")
+                .name("Джим")
+                .birthday(LocalDate.of(1962, 1, 17))
+                .build();
+        userStorage.addUser(firstUser);
+
+        assertThrows(IncorrectParameterException.class, () -> filmStorage.addRateFromUserById(1,1,11));
+        assertThrows(IncorrectParameterException.class, () -> filmStorage.addRateFromUserById(1,1,0));
+    }
+    @Test
+    public void updateWrongRateFromUserByIdTest() {
+        firstFilm = Film.builder()
+                .description("Описание")
+                .releaseDate(LocalDate.of(1994, 12, 14))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .build();
+        filmStorage.addFilm(firstFilm);
+
+        User firstUser = User.builder()
+                .email("jim@email.com")
+                .login("Jim")
+                .name("Джим")
+                .birthday(LocalDate.of(1962, 1, 17))
+                .build();
+        userStorage.addUser(firstUser);
+
+        filmStorage.addRateFromUserById(1,1,5);
+
+        assertThrows(IncorrectParameterException.class, () -> filmStorage.updateRateFromUserById(1,1,11));
+        assertThrows(IncorrectParameterException.class, () -> filmStorage.updateRateFromUserById(1,1,0));
     }
 
     @Test
