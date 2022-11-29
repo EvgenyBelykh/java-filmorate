@@ -123,7 +123,7 @@ public class FilmController {
     public List<Film> getSortedFilmByDirector(
             @PathVariable("directorId") Integer directorId,
             @RequestParam(value = "sortBy") String sortBy) {
-        log.info("Запрос отсортированного списка фильмов режиссера с id: {} по году или лайкам: {}", directorId,
+        log.info("Запрос отсортированного списка фильмов режиссера с id: {} по году или рейтингу: {}", directorId,
                 sortBy);
         return filmService.getSortedFilmByDirector(directorId, sortBy);
     }

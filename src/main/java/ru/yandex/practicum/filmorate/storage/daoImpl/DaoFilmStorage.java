@@ -101,6 +101,7 @@ public class DaoFilmStorage implements FilmStorage {
             //бО'льшую нагрузку на техподдержку. Пока оставил так, незнаю как правильно). Я бы вообще запретил обновлять
             //фильмы. На кинопоиске вроде нельзя менять фильмы (как и добавлять)
 
+            //а у нас демократия как в википедии - каждый может вносить правки:)))
 
             getFilmById(film.getId());
             String sqlQuery = "UPDATE films SET " +
@@ -225,17 +226,17 @@ public class DaoFilmStorage implements FilmStorage {
     @Override
     public List<Film> getMostPopularFilmByCountLikes(Integer cnt, Integer genreId, Year year) {
         if (genreId == null && year == null) {
-            //запрос популярных фильмов по лайкам все годов и жанров
+            //запрос популярных фильмов по рейтингу все годов и жанров
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
                     "LEFT JOIN rate ON rate.id_film = films.id " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(rate.id_user) DESC " +
+                    "ORDER BY AVG(rate.RATE) DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), cnt);
 
         } else if (genreId != null && year != null) {
-            //запрос популярных фильмов по лайкам конкретного года и жанра
+            //запрос популярных фильмов по рейтингу конкретного года и жанра
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
                     "LEFT JOIN rate ON rate.id_film = films.id " +
@@ -243,30 +244,30 @@ public class DaoFilmStorage implements FilmStorage {
                     "WHERE EXTRACT (YEAR FROM films.release_date ) = ? " +
                     "AND film_genres.id_genre = ? " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(rate.id_user) DESC " +
+                    "ORDER BY AVG(rate.RATE) DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), String.valueOf(year), genreId, cnt);
 
         } else if (genreId == null) {
-            //запрос популярных фильмов по лайкам конкретного года
+            //запрос популярных фильмов по рейтингу конкретного года
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
                     "LEFT JOIN rate ON rate.id_film = films.id " +
                     "WHERE EXTRACT (YEAR FROM films.release_date ) = ? " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(rate.id_user) DESC " +
+                    "ORDER BY AVG(rate.RATE) DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), String.valueOf(year), cnt);
 
         } else {
-            //запрос популярных фильмов по лайкам конкретного жанра
+            //запрос популярных фильмов по рейтингу конкретного жанра
             String sqlQuery = "SELECT films.* " +
                     "FROM films " +
                     "LEFT JOIN rate ON rate.id_film = films.id " +
                     "LEFT JOIN film_genres ON film_genres.id_film = films.id " +
                     "WHERE film_genres.id_genre = ? " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(rate.id_user) DESC " +
+                    "ORDER BY AVG(rate.RATE) DESC " +
                     "LIMIT ?;";
             return jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), genreId, cnt);
 
@@ -291,14 +292,14 @@ public class DaoFilmStorage implements FilmStorage {
             throw new ValidationException("Такого режиссера не существует!");
         }
         List<Film> films = new ArrayList<>();
-        if (sortBy.equals("likes")) {
+        if (sortBy.equals("rates")) {
             String sqlQuery = "SELECT FILMS.* " +
                     "FROM FILMS " +
                     "LEFT JOIN rate ON rate.ID_FILM = FILMS.ID " +
                     "LEFT JOIN FILM_DIRECTORS ON FILM_DIRECTORS.ID_FILM = films.ID " +
                     "WHERE ID_DIRECTOR = ? " +
                     "GROUP BY films.id " +
-                    "ORDER BY COUNT(rate.id_user) DESC ";
+                    "ORDER BY AVG(rate.RATE) DESC ";
             films = jdbcTemplate.query(sqlQuery, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate), directorId);
         } else if (sortBy.equals("year")) {
             String sqlQuery = "SELECT FILMS.* " +
