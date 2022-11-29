@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import ru.yandex.practicum.filmorate.exceptions.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.models.*;
 import ru.yandex.practicum.filmorate.storage.daoImpl.DaoDirectorStorage;
@@ -124,9 +125,9 @@ public class FilmControllerWithDaoTest {
     @Test
     public void updateFilmTest() {
         firstFilm = Film.builder()
-                .description("Описание")
-                .releaseDate(LocalDate.of(1994, 12, 14))
-                .duration(101)
+                .description("Фильм о двух тупых чувачков") //неверное описание
+                .releaseDate(LocalDate.of(1994, 12, 6)) //неверная дата выхода
+                .duration(107) //неверная длительность фильма
                 .name("Маска")
                 .mpa(listMpa.get(1))
                 .build();
@@ -139,9 +140,25 @@ public class FilmControllerWithDaoTest {
                 .name("Тупой и еще тупее")
                 .mpa(listMpa.get(1))
                 .build();
+
+        thirdFilm = Film.builder()
+                .id(1)
+                .description("Про маску")
+                .releaseDate(LocalDate.of(1994, 12, 14))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .build();
+
         filmStorage.addFilm(firstFilm);
 
         assertThrows(ValidationException.class, () -> filmStorage.updateFilm(secondFilm));
+
+        filmStorage.updateFilm(thirdFilm);
+        assertEquals(thirdFilm.getName(), filmStorage.getFilms().get(0).getName());
+        assertEquals(thirdFilm.getDescription(), filmStorage.getFilms().get(0).getDescription());
+        assertEquals(thirdFilm.getReleaseDate(), filmStorage.getFilms().get(0).getReleaseDate());
+        assertEquals(thirdFilm.getDuration(), filmStorage.getFilms().get(0).getDuration());
     }
 
     @Test
@@ -235,6 +252,52 @@ public class FilmControllerWithDaoTest {
         );
         assertEquals("Фильм c id: 3 не содержится в базе"
                 , exception.getMessage());
+    }
+    @Test
+    public void addWrongRateFromUserByIdTest() {
+        firstFilm = Film.builder()
+                .description("Описание")
+                .releaseDate(LocalDate.of(1994, 12, 14))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .build();
+        filmStorage.addFilm(firstFilm);
+
+        User firstUser = User.builder()
+                .email("jim@email.com")
+                .login("Jim")
+                .name("Джим")
+                .birthday(LocalDate.of(1962, 1, 17))
+                .build();
+        userStorage.addUser(firstUser);
+
+        assertThrows(IncorrectParameterException.class, () -> filmStorage.addRateFromUserById(1,1,11));
+        assertThrows(IncorrectParameterException.class, () -> filmStorage.addRateFromUserById(1,1,0));
+    }
+    @Test
+    public void updateWrongRateFromUserByIdTest() {
+        firstFilm = Film.builder()
+                .description("Описание")
+                .releaseDate(LocalDate.of(1994, 12, 14))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .build();
+        filmStorage.addFilm(firstFilm);
+
+        User firstUser = User.builder()
+                .email("jim@email.com")
+                .login("Jim")
+                .name("Джим")
+                .birthday(LocalDate.of(1962, 1, 17))
+                .build();
+        userStorage.addUser(firstUser);
+
+        filmStorage.addRateFromUserById(1,1,5);
+
+        assertThrows(IncorrectParameterException.class, () -> filmStorage.updateRateFromUserById(1,1,11));
+        assertThrows(IncorrectParameterException.class, () -> filmStorage.updateRateFromUserById(1,1,0));
     }
 
     @Test

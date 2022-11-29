@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exceptions.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.models.Film;
@@ -92,7 +93,7 @@ public class DaoFilmStorage implements FilmStorage {
 
     @Override
     public Film updateFilm(Film film) {
-        if(!film.getName().equals(checkNameByIdFromDB(film.getId()))){
+        if(film.getName().equals(checkNameByIdFromDB(film.getId()))){
 
             //Тут сложный момент, если поменять название фильма на совершеннно другой фильм, то по-хорошему надо высчитывать
             //rate заново, иначе совершенно другому фильму можно поставить рейтинг, который он не заслуживает.
@@ -154,27 +155,36 @@ public class DaoFilmStorage implements FilmStorage {
 
     @Override
     public Film addRateFromUserById(Integer filmId, Integer userId, Integer rate) {
+        if (rate < 1 || rate > 10){
+            log.info("Неверный параметр rate: {}, rate должен быть от 1 до 10 ", rate);
+            throw new IncorrectParameterException("rate");
+        } else {
+            String sqlQueryRate = "INSERT INTO rate(id_user, id_film, rate) " +
+                    "VALUES(?, ?, ?)";
+            jdbcTemplate.update(sqlQueryRate, userId, filmId, rate);
 
-        String sqlQueryRate = "INSERT INTO rate(id_user, id_film, rate) " +
-                "VALUES(?, ?, ?)";
-        jdbcTemplate.update(sqlQueryRate, userId, filmId, rate);
+            updateRateFilm(filmId);
 
-        updateRateFilm(filmId);
-
-        return getFilmById(filmId);
+            return getFilmById(filmId);
+        }
     }
 
     @Override
     public Film updateRateFromUserById(Integer filmId, Integer userId, Integer rate) {
+        if (rate < 1 || rate > 10){
+            log.info("Неверный параметр rate: {}, rate должен быть от 1 до 10 ", rate);
+            throw new IncorrectParameterException("rate");
+        } else {
 
-        String sqlQueryRate = "UPDATE rate SET " +
-                "rate = ? " +
-                "WHERE id_user = ? AND id_film = ? " ;
-        jdbcTemplate.update(sqlQueryRate, rate,  userId, filmId);
+            String sqlQueryRate = "UPDATE rate SET " +
+                    "rate = ? " +
+                    "WHERE id_user = ? AND id_film = ? ";
+            jdbcTemplate.update(sqlQueryRate, rate, userId, filmId);
 
-        updateRateFilm(filmId);
+            updateRateFilm(filmId);
 
-        return getFilmById(filmId);
+            return getFilmById(filmId);
+        }
     }
 
     @Override

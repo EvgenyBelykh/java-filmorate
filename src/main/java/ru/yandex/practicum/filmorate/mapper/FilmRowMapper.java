@@ -8,11 +8,9 @@ import ru.yandex.practicum.filmorate.models.Film;
 import ru.yandex.practicum.filmorate.services.DirectorService;
 import ru.yandex.practicum.filmorate.services.GenreService;
 import ru.yandex.practicum.filmorate.services.MpaService;
-import ru.yandex.practicum.filmorate.storage.daoImpl.DaoFilmStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
 
 @Data
 @AllArgsConstructor

@@ -60,6 +60,11 @@ public class FilmController {
             , @PathVariable("userId") Integer userId
             , @RequestParam(value = "rate") Integer rate) {
         log.info("Запрос добавления рейтинга: {} фильму c id: {} от пользователя с id: {}", rate, filmId, userId);
+
+        if (rate < 1 || rate > 10) {
+            log.info("Неверный параметр rate: {}, rate должен быть от 1 до 10 ", rate);
+            throw new IncorrectParameterException("rate");
+        }
         return filmService.addRateFromUserById(filmId, userId, rate);
     }
     @PutMapping("/{id}/rate/{userId}")
@@ -67,6 +72,12 @@ public class FilmController {
             , @PathVariable("userId") Integer userId
             , @RequestParam(value = "rate") Integer rate) {
         log.info("Запрос обновления рейтинга: {} фильму c id: {} от пользователя с id: {}", rate, filmId, userId);
+
+        if (rate < 1 || rate > 10) {
+            log.info("Неверный параметр rate: {}, rate должен быть от 1 до 10 ", rate);
+            throw new IncorrectParameterException("rate");
+        }
+
         return filmService.updateRateFromUserById(filmId, userId, rate);
     }
 
@@ -74,7 +85,6 @@ public class FilmController {
     public Film removeRateFromUserById(@PathVariable("id") Integer filmId
             , @PathVariable("userId") Integer userId) {
         log.info("Запрос удаления рейтинга фильму c id: {} от пользователя с id: {}", filmId, userId);
-
         return filmService.removeRateFromUserById(filmId, userId);
     }
     @GetMapping("/{id}/rate")
