@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.Constants;
+import ru.yandex.practicum.filmorate.SQLRequests;
 import ru.yandex.practicum.filmorate.exceptions.EmptyResultFromDataBaseException;
 import ru.yandex.practicum.filmorate.mapper.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.models.Review;
@@ -23,14 +23,14 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
     @Override
     public List<Review> getAll() {
         return jdbcTemplate.query(
-                Constants.GET_REVIEWS,
+                SQLRequests.GET_REVIEWS,
                 new ReviewRowMapper()
         );
     }
 
     @Override
     public List<Review> getByParams(Map<String, Integer> params) {
-        StringBuilder queryString = new StringBuilder(Constants.GET_REVIEWS_BY_FILM_ID);
+        StringBuilder queryString = new StringBuilder(SQLRequests.GET_REVIEWS_BY_FILM_ID);
         int limit = 10;
         if(!params.isEmpty()) {
             if (params.containsKey("filmId")) {
@@ -59,7 +59,7 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
     @Override
     public Review create(Review review) {
         createOrUpdate(
-                Constants.CREATE_REVIEW,
+                SQLRequests.CREATE_REVIEW,
                 new Object[]{
                         review.getUserId(),
                         review.getFilmId(),
@@ -70,7 +70,7 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
         );
 
         return jdbcTemplate.query(
-                        Constants.GET_LAST_REVIEW,
+                        SQLRequests.GET_LAST_REVIEW,
                         new ReviewRowMapper()
                 )
                 .stream()
@@ -81,7 +81,7 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
     @Override
     public Review update(Review review) {
         createOrUpdate(
-                Constants.UPDATE_REVIEW,
+                SQLRequests.UPDATE_REVIEW,
                 new Object[]{
                         review.getContent(),
                         review.getIsPositive(),
@@ -91,7 +91,7 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
         );
 
         return jdbcTemplate.query(
-                        Constants.GET_LAST_REVIEW_AFTER_UPDATE,
+                        SQLRequests.GET_LAST_REVIEW_AFTER_UPDATE,
                         new ReviewRowMapper(),
                         review.getReviewId()
                 )
@@ -103,7 +103,7 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
     @Override
     public Review getById(Long reviewId) {
         return jdbcTemplate.query(
-            Constants.GET_REVIEWS_BY_ID,
+            SQLRequests.GET_REVIEWS_BY_ID,
             new ReviewRowMapper(),
             reviewId
         )
@@ -115,18 +115,18 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
     @Override
     public void addLikeToReview(Integer reviewId, Integer userId) {
         jdbcTemplate.update(
-                Constants.INSERT_LIKE_TO_REVIEW,
+                SQLRequests.INSERT_LIKE_TO_REVIEW,
                 reviewId,
                 userId
         );
 
         jdbcTemplate.update(
-                Constants.UPDATE_REVIEW_AFTER_ADD_LIKE,
+                SQLRequests.UPDATE_REVIEW_AFTER_ADD_LIKE,
                 reviewId
         );
 
         jdbcTemplate.update(
-                Constants.DELETE_DISLIKE_FROM_REVIEW,
+                SQLRequests.DELETE_DISLIKE_FROM_REVIEW,
                 reviewId,
                 userId
         );
@@ -135,18 +135,18 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
     @Override
     public void addDisLikeToReview(Integer reviewId, Integer userId) {
         jdbcTemplate.update(
-                Constants.INSERT_DISLIKE_TO_REVIEW,
+                SQLRequests.INSERT_DISLIKE_TO_REVIEW,
                 reviewId,
                 userId
         );
 
         jdbcTemplate.update(
-                Constants.UPDATE_REVIEW_AFTER_ADD_DISLIKE,
+                SQLRequests.UPDATE_REVIEW_AFTER_ADD_DISLIKE,
                 reviewId
         );
 
         jdbcTemplate.update(
-                Constants.DELETE_LIKE_FROM_REVIEW,
+                SQLRequests.DELETE_LIKE_FROM_REVIEW,
                 reviewId,
                 userId
         );
@@ -163,7 +163,7 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
     @Override
     public Boolean checkReviewExists(Integer reviewId) {
         Integer reviewCount = jdbcTemplate.queryForObject(
-                Constants.GET_REVIEW_COUNT_ID,
+                SQLRequests.GET_REVIEW_COUNT_ID,
                 Integer.class,
                 reviewId
         );
@@ -173,7 +173,7 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
     @Override
     public Boolean checkFilmExists(Integer filmId) {
         Integer filmsCount = jdbcTemplate.queryForObject(
-                Constants.GET_FILM_BY_ID,
+                SQLRequests.GET_FILM_BY_ID,
                 Integer.class,
                 filmId
         );
@@ -184,7 +184,7 @@ public class DaoReviewStorage implements ReviewStorage<Review> {
     @Override
     public Boolean checkUserExists(Integer userId) {
         Integer usersCount = jdbcTemplate.queryForObject(
-                Constants.GET_USER_BY_ID,
+                SQLRequests.GET_USER_BY_ID,
                 Integer.class,
                 userId
         );

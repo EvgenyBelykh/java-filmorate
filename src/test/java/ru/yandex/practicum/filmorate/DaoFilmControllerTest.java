@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class FilmControllerWithDaoTest {
+public class DaoFilmControllerTest {
     private final JdbcTemplate jdbcTemplate;
     private final DaoFilmStorage filmStorage;
     private final DaoUserStorage userStorage;
@@ -357,7 +357,7 @@ public class FilmControllerWithDaoTest {
     }
 
     @Test
-    public void getMostPopularFilmByCountLikesTest() {
+    public void getMostPopularFilmByRateTest() {
         User firstUser = User.builder()
                 .email("jim@email.com")
                 .login("Jim")
@@ -421,9 +421,9 @@ public class FilmControllerWithDaoTest {
 
         filmStorage.addRateFromUserById(1, 1, 5);
 
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(1, null, null).size(), 1);
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, null, null).size(), 3);
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, null, null).size(), 3);
+        assertEquals(filmStorage.getMostPopularFilmByRate(1, null, null).size(), 1);
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, null, null).size(), 3);
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, null, null).size(), 3);
     }
     @Test
     public void getMostPopularFilmByGenreTest() {
@@ -493,11 +493,11 @@ public class FilmControllerWithDaoTest {
 
         filmStorage.addRateFromUserById(1, 1, 5);
 
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, 1, null).size(), 2
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, 1, null).size(), 2
                 , "Вернулся неверный список фильмов");
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, 2, null).size(), 1
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, 2, null).size(), 1
                 , "Вернулся неверный список фильмов");
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, 3, null).size(), 0
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, 3, null).size(), 0
                 , "Вернулся неверный список фильмов");
     }
     @Test
@@ -568,11 +568,11 @@ public class FilmControllerWithDaoTest {
 
         filmStorage.addRateFromUserById(1, 1, 5);
 
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, null, Year.of(1994)).size(), 2
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, null, Year.of(1994)).size(), 2
                 , "Вернулся неверный список фильмов");
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, null, Year.of(2004)).size(), 1
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, null, Year.of(2004)).size(), 1
                 , "Вернулся неверный список фильмов");
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, null, Year.of(2022)).size(), 0
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, null, Year.of(2022)).size(), 0
                 , "Вернулся неверный список фильмов");
     }
     @Test
@@ -643,13 +643,13 @@ public class FilmControllerWithDaoTest {
 
         filmStorage.addRateFromUserById(1, 1, 5);
 
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, 1, Year.of(1994)).size(), 2
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, 1, Year.of(1994)).size(), 2
                 , "Вернулся неверный список фильмов");
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, 2, Year.of(2004)).size(), 1
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, 2, Year.of(2004)).size(), 1
                 , "Вернулся неверный список фильмов");
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, 1, Year.of(2022)).size(), 0
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, 1, Year.of(2022)).size(), 0
                 , "Вернулся неверный список фильмов");
-        assertEquals(filmStorage.getMostPopularFilmByCountLikes(10, 2, Year.of(1994)).size(), 0
+        assertEquals(filmStorage.getMostPopularFilmByRate(10, 2, Year.of(1994)).size(), 0
                 , "Вернулся неверный список фильмов");
     }
 
@@ -953,5 +953,60 @@ public class FilmControllerWithDaoTest {
         assertEquals(secondFilm, films.get(0));
         assertEquals(firstFilm, films.get(1));
         assertEquals(2, films.size());
+    }
+    @Test
+    public void getCommonFilms() {
+
+        firstFilm = Film.builder()
+                .description("Описание")
+                .releaseDate(LocalDate.of(1994, 1, 28))
+                .duration(101)
+                .name("Маска")
+                .mpa(listMpa.get(1))
+                .genres(Collections.singletonList(listGenre.get(0)))
+                .build();
+        filmStorage.addFilm(firstFilm);
+
+        secondFilm = Film.builder()
+                .description("Описание")
+                .releaseDate(LocalDate.of(1994, 12, 6))
+                .duration(107)
+                .name("Тупой и еще тупее")
+                .mpa(listMpa.get(1))
+                .genres(Collections.singletonList(listGenre.get(0)))
+                .build();
+        filmStorage.addFilm(secondFilm);
+
+        thirdFilm = Film.builder()
+                .description("Описание")
+                .releaseDate(LocalDate.of(2004, 3, 9))
+                .duration(108)
+                .name("Вечное сияние чистого разума")
+                .mpa(listMpa.get(1))
+                .genres(Collections.singletonList(listGenre.get(1)))
+                .build();
+        filmStorage.addFilm(thirdFilm);
+
+        User firstUser = User.builder()
+                .email("mail@mail.ru")
+                .login("login")
+                .name("name")
+                .birthday(LocalDate.of(2003, 1, 28))
+                .build();
+        userStorage.addUser(firstUser);
+        filmStorage.addRateFromUserById(1,1,10);
+        filmStorage.addRateFromUserById(3,1,5);
+
+        User secondUser = User.builder()
+                .email("yandex@yandex.ru")
+                .login("login")
+                .name("name")
+                .birthday(LocalDate.of(1989, 1, 28))
+                .build();
+        userStorage.addUser(secondUser);
+        filmStorage.addRateFromUserById(1,2,5);
+        filmStorage.addRateFromUserById(3,2,2);
+
+        assertEquals(2, filmStorage.findCommon(1,2).size(), "Неверно количество общих фильмов");
     }
 }

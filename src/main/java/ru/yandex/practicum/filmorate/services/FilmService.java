@@ -87,25 +87,20 @@ public class FilmService {
         return filmStorage.getRateFilmById(filmId);
     }
     public List<Film> getMostPopularFilmByCountLikes(Integer count, Integer genreId, Year year){
-        return filmStorage.getMostPopularFilmByCountLikes(count, genreId, year);
-    }
-    public UserService getUserService() {
-        return userService;
+        return filmStorage.getMostPopularFilmByRate(count, genreId, year);
     }
     public List<Film> getSortedFilmByDirector(Integer directorId, String sortBy) {
         return filmStorage.getSortedFilmByDirector(directorId, sortBy);
     }
 
     public List<Film> findCommon (int userId, int friendId){
-//        List<Film> common = filmStorage.findCommon(userId, friendId);
-//        common.sort((o1, o2) -> o2.getLikes().size() - o1.getLikes().size());
-//
-//                return common;
-        return null;
+        return filmStorage.findCommon(userId, friendId);
     }
-
     public List<Film> searchFilm(String substring, String by) throws IllegalArgumentException {
         return filmStorage.searchFilms(substring, by);
+    }
+    public UserService getUserService() {
+        return userService;
     }
 
 }

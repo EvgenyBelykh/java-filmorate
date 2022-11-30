@@ -20,7 +20,7 @@ public interface FilmStorage {
 
     List<Film> findCommon(int userId, int friendsId);
 
-    List<Film> getMostPopularFilmByCountLikes(Integer count, Integer genreId, Year year);
+    List<Film> getMostPopularFilmByRate(Integer count, Integer genreId, Year year);
 
     List<Film> getSortedFilmByDirector(Integer id, String sortBy);
 
