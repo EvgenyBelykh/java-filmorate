@@ -337,9 +337,6 @@ public class DaoFilmStorage implements FilmStorage {
                 "ORDER BY COUNT(f.rate) DESC;";
         Set<Film> films = new HashSet<>(jdbcTemplate.query(sql, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate)));
         List<Film> result = new ArrayList<>(films);
-        for (Film film : result) {
-            film.setRate(getRateFromTableRate(film.getId()));
-        }
         result.sort(Comparator.comparingDouble(Film::getRate));
         Collections.reverse(result);
         return result;
