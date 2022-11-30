@@ -338,19 +338,17 @@ public class DaoFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> searchFilms(String substring, String by) throws IllegalArgumentException {
-//        String sql = "SELECT *" +
-//                "FROM films AS f " +
-//                "LEFT OUTER JOIN film_directors AS fd ON f.id = fd.id_film " +
-//                "LEFT OUTER JOIN directors AS d ON fd.id_director = d.id " +
-//                "LEFT JOIN rate AS l ON f.id = l.id_film " +
-//                "WHERE " + getInsertString(substring, by) + " " +
-//                "GROUP BY f.id, l.id_user " +
-//                "ORDER BY COUNT(l.id_user) DESC;";
-//        Set<Film> films = new HashSet<>(jdbcTemplate.query(sql, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate)));
-//        List<Film> result = new ArrayList<>(films);
-//        result.sort(Comparator.comparingInt(film -> film.getLikes().size()));
-//        Collections.reverse(result);
-//        return result;
-        return null;
+        String sql = "SELECT *" +
+                "FROM films AS f " +
+                "LEFT OUTER JOIN film_directors AS fd ON f.id = fd.id_film " +
+                "LEFT OUTER JOIN directors AS d ON fd.id_director = d.id " +
+                "WHERE " + getInsertString(substring, by) + " " +
+                "GROUP BY f.id " +
+                "ORDER BY COUNT(f.rate) DESC;";
+        Set<Film> films = new HashSet<>(jdbcTemplate.query(sql, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate)));
+        List<Film> result = new ArrayList<>(films);
+        result.sort(Comparator.comparingDouble(Film::getRate));
+        Collections.reverse(result);
+        return result;
     }
 }
