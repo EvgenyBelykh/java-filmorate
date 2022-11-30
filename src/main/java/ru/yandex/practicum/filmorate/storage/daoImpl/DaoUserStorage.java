@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.Constants;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.mapper.UserRowMapper;
@@ -177,22 +178,7 @@ public class DaoUserStorage implements UserStorage {
     }
 
     public List<Film> getRecommendations(Integer userId) {
-        return jdbcTemplate.query(
-                "SELECT * FROM FILMS film " +
-                        "WHERE film.ID IN " +
-                            "(SELECT rate.ID_FILM  FROM RATE rate " +
-                                "WHERE rate.ID_USER IN " +
-                                    "(SELECT ID_USER FROM RATE l " +
-                                        "WHERE l.ID_USER != ? " +
-                                            "AND " +
-                                                "l.ID_FILM IN " +
-                                                    "(SELECT l.ID_FILM FROM RATE l " +
-                                                        "WHERE l.ID_USER = ?)" +
-                                    ") " +
-                            "GROUP BY rate.ID_FILM " +
-                            "HAVING rate.ID_FILM NOT IN " +
-                                "(SELECT l.ID_FILM FROM RATE l WHERE l.ID_USER = ?)" +
-                            ")",
+        return jdbcTemplate.query(Constants.SQL_GET_RECOMMENDATIONS,
                 new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate),
                 userId, userId, userId);
     }
