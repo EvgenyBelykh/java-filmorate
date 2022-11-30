@@ -6,29 +6,39 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.SQLRequests;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
+import ru.yandex.practicum.filmorate.mapper.UserRowMapper;
 import ru.yandex.practicum.filmorate.models.Film;
 import ru.yandex.practicum.filmorate.models.User;
+import ru.yandex.practicum.filmorate.services.DirectorService;
 import ru.yandex.practicum.filmorate.services.GenreService;
 import ru.yandex.practicum.filmorate.services.MpaService;
 import ru.yandex.practicum.filmorate.storage.interf.UserStorage;
 
-import java.sql.*;
 import java.sql.Date;
-import java.util.*;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @Component
 @Slf4j
 @Primary
 public class DaoUserStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
-
     private final MpaService mpaService;
     private final GenreService genreService;
-    public DaoUserStorage(JdbcTemplate jdbcTemplate, MpaService mpaService, GenreService genreService) {
+    private final DirectorService directorService;
+    public DaoUserStorage(JdbcTemplate jdbcTemplate, MpaService mpaService, GenreService genreService, DirectorService directorService) {
         this.jdbcTemplate = jdbcTemplate;
         this.mpaService = mpaService;
         this.genreService = genreService;
+        this.directorService = directorService;
     }
 
     @Override
@@ -37,7 +47,7 @@ public class DaoUserStorage implements UserStorage {
             String sqlQuery = "SELECT id, name, email, login, birthday " +
                     "FROM users " +
                     "WHERE id = ?";
-            return jdbcTemplate.queryForObject(sqlQuery, this::mapRowToUsers, userId);
+            return jdbcTemplate.queryForObject(sqlQuery, new UserRowMapper(jdbcTemplate, mpaService, genreService, directorService), userId);
         } catch (Exception e) {
             log.info("Пользователь c id - {} не содержится в базе", userId);
             throw new ValidationException("Пользователь c id - " + userId + " не содержится в базе");
@@ -83,7 +93,7 @@ public class DaoUserStorage implements UserStorage {
         String sqlQuery = "SELECT * " +
                 "FROM users";
 
-        return jdbcTemplate.query(sqlQuery, this::mapRowToUsers);
+        return jdbcTemplate.query(sqlQuery, new UserRowMapper(jdbcTemplate, mpaService, genreService, directorService));
     }
 
     @Override
@@ -121,7 +131,7 @@ public class DaoUserStorage implements UserStorage {
                 ")";
 
 
-        return new HashSet<>(jdbcTemplate.query(sqlQuery, this::mapRowToUsers, userId));
+        return new HashSet<>(jdbcTemplate.query(sqlQuery, new UserRowMapper(jdbcTemplate, mpaService, genreService, directorService), userId));
     }
 
     @Override
@@ -148,7 +158,7 @@ public class DaoUserStorage implements UserStorage {
                 "AND uf2.id_user_one = ? " +
                 ")";
 
-        return new HashSet<>(jdbcTemplate.query(sqlQuery, this::mapRowToUsers, userId, otherId));
+        return new HashSet<>(jdbcTemplate.query(sqlQuery, new UserRowMapper(jdbcTemplate, mpaService, genreService, directorService), userId, otherId));
     }
 
     private void checkNullNameAndSetName(PreparedStatement ps, User user) throws SQLException {
@@ -159,7 +169,7 @@ public class DaoUserStorage implements UserStorage {
         }
     }
 
-    private List<Integer> getUserFriendsIds(Integer userId) {
+    public List<Integer> getUserFriendsIds(Integer userId) {
         String sqlQuery = "SELECT id_user_two " +
                 "FROM users_friends " +
                 "WHERE id_user_one = ?";
@@ -168,48 +178,8 @@ public class DaoUserStorage implements UserStorage {
     }
 
     public List<Film> getRecommendations(Integer userId) {
-        return jdbcTemplate.query(
-                "SELECT * FROM FILMS film " +
-                        "WHERE film.ID IN " +
-                            "(SELECT likes.ID_FILM  FROM LIKES likes " +
-                                "WHERE likes.ID_USER IN " +
-                                    "(SELECT ID_USER FROM LIKES l " +
-                                        "WHERE l.ID_USER != ? " +
-                                            "AND " +
-                                                "l.ID_FILM IN " +
-                                                    "(SELECT l.ID_FILM FROM LIKES l " +
-                                                        "WHERE l.ID_USER = ?)" +
-                                    ") " +
-                            "GROUP BY likes.ID_FILM " +
-                            "HAVING likes.ID_FILM NOT IN " +
-                                "(SELECT l.ID_FILM FROM LIKES l WHERE l.ID_USER = ?)" +
-                            ")",
-                this::mapRowToFilms,
+        return jdbcTemplate.query(SQLRequests.GET_RECOMMENDATIONS,
+                new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate),
                 userId, userId, userId);
-    }
-
-    private Film mapRowToFilms(ResultSet resultSet, int i) throws SQLException {
-        return Film.builder()
-                .id(resultSet.getInt("id"))
-                .name(resultSet.getString("name"))
-                .description(resultSet.getString("description"))
-                .releaseDate(resultSet.getDate("release_date").toLocalDate())
-                .duration(resultSet.getInt("duration"))
-                .likes(new HashSet<>(new DaoFilmStorage(jdbcTemplate).getLikesFromUserByFilmId(resultSet.getInt("id"))))
-                .rate(resultSet.getInt("rate"))
-                .mpa(mpaService.getMpaById(Integer.valueOf(resultSet.getString("mpa"))))
-                .genres(genreService.getGenresByIdFilm(resultSet.getInt("id")))
-                .build();
-    }
-
-    private User mapRowToUsers(ResultSet resultSet, int i) throws SQLException {
-        return User.builder()
-                .id(resultSet.getInt("id"))
-                .name(resultSet.getString("name"))
-                .email(resultSet.getString("email"))
-                .login(resultSet.getString("login"))
-                .birthday(resultSet.getDate("birthday").toLocalDate())
-                .friends(new HashSet<>(getUserFriendsIds(resultSet.getInt("id"))))
-                .build();
     }
 }

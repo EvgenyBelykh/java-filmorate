@@ -13,15 +13,18 @@ public interface FilmStorage {
     List<Film> getFilms();
     Film getFilmById(Integer filmId);
 
-    Film addLikeFromUserById(Integer filmId, Integer userId);
+    Film addRateFromUserById(Integer filmId, Integer userId, Integer rate);
+    Film updateRateFromUserById(Integer filmId, Integer userId, Integer rate);
 
-    Film removeLikeFromUserById(Integer filmId, Integer userId);
+    Film removeRateFromUserById(Integer filmId, Integer userId);
 
     List<Film> findCommon(int userId, int friendsId);
 
-    List<Film> getMostPopularFilmByCountLikes(Integer count, Integer genreId, Year year);
+    List<Film> getMostPopularFilmByRate(Integer count, Integer genreId, Year year);
 
     List<Film> getSortedFilmByDirector(Integer id, String sortBy);
 
     public List<Film> searchFilms(String substring, String by) throws IllegalArgumentException;
+
+    Double getRateFilmById(Integer filmId);
 }

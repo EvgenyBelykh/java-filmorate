@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class UserControllerWithDaoTest {
+public class DaoUserControllerTest {
 
     private final JdbcTemplate jdbcTemplate;
     private final DaoUserStorage userStorage;
@@ -35,7 +35,7 @@ public class UserControllerWithDaoTest {
     void tearDown(){
         jdbcTemplate.update("DELETE FROM USERS");
         jdbcTemplate.update("DELETE FROM FILMS");
-        jdbcTemplate.update("DELETE FROM LIKES");
+        jdbcTemplate.update("DELETE FROM RATE");
         jdbcTemplate.update("DELETE FROM USERS_FRIENDS");
         jdbcTemplate.update("DELETE FROM FILM_GENRES");
         jdbcTemplate.update("ALTER TABLE USERS ALTER COLUMN ID RESTART WITH 1");

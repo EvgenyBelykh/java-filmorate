@@ -1,0 +1,37 @@
+package ru.yandex.practicum.filmorate.mapper;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import ru.yandex.practicum.filmorate.models.Film;
+import ru.yandex.practicum.filmorate.services.DirectorService;
+import ru.yandex.practicum.filmorate.services.GenreService;
+import ru.yandex.practicum.filmorate.services.MpaService;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+@Data
+@AllArgsConstructor
+public class FilmRowMapper implements RowMapper<Film> {
+    private final MpaService mpaService;
+    private final GenreService genreService;
+    private final DirectorService directorService;
+    private final JdbcTemplate jdbcTemplate;
+
+    @Override
+    public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return Film.builder()
+                .id(rs.getInt("id"))
+                .name(rs.getString("name"))
+                .description(rs.getString("description"))
+                .releaseDate(rs.getDate("release_date").toLocalDate())
+                .duration(rs.getInt("duration"))
+                .rate(rs.getDouble("rate"))
+                .mpa(mpaService.getMpaById(Integer.valueOf(rs.getString("mpa"))))
+                .genres(genreService.getGenresByIdFilm(rs.getInt("id")))
+                .directors(directorService.getDirectorsByIdFilm(rs.getInt("id")))
+                .build();
+    }
+}

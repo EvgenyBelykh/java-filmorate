@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS films
     description  VARCHAR(256),
     release_date TIMESTAMP,
     duration     INTEGER,
-    rate         INTEGER,
+    rate         DOUBLE,
     mpa          VARCHAR(64),
     CONSTRAINT   length_duration
                  CHECK (duration > 0),
@@ -51,15 +51,20 @@ CREATE TABLE IF NOT EXISTS films
                  CHECK (name NOT LIKE ' ' AND NOT NULL),
     CONSTRAINT   after_first_film
                  CHECK (CAST (release_date AS DATE) > (CAST('1895-12-28' AS DATE))),
-    CONSTRAINT   mpas FOREIGN KEY (mpa) REFERENCES mpa (id)
+    CONSTRAINT   mpas FOREIGN KEY (mpa) REFERENCES mpa (id),
+    CONSTRAINT   common_rate_film
+                 CHECK (NOT(rate < 1 OR rate > 10))
 );
 
-CREATE TABLE IF NOT EXISTS likes
+CREATE TABLE IF NOT EXISTS rate
 (
     id_user      INTEGER NOT NULL,
     id_film      INTEGER NOT NULL,
-    CONSTRAINT   likes_id_user FOREIGN KEY (id_user) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT   likes_id_film FOREIGN KEY (id_film) REFERENCES films (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    rate         INTEGER NOT NULL,
+    CONSTRAINT   rate_id_user FOREIGN KEY (id_user) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT   rate_id_film FOREIGN KEY (id_film) REFERENCES films (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT   rate_film_from_User
+                 CHECK (NOT(rate < 1 OR rate > 10)),
     PRIMARY KEY  (id_user, id_film)
 );
 

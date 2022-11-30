@@ -41,52 +41,66 @@ public class FilmService {
     public void removeFilm(Integer id){
         filmStorage.removeFilm(id);
     }
-    public Film addLikeFromUserById(Integer filmId, Integer userId){
+    public Film addRateFromUserById(Integer filmId, Integer userId, Integer rate){
         Film film = filmStorage.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
         Map<String, Object> params = eventStorage.makeEvent(
                 (long)userId,
                 filmId,
-                "like",
+                "rate",
                 "add"
         );
         eventStorage.save(params);
 
-        return filmStorage.addLikeFromUserById(film.getId(), user.getId());
+        return filmStorage.addRateFromUserById(film.getId(), user.getId(), rate);
     }
-    public Film removeLikeFromUserById(Integer filmId, Integer userId){
+    public Film updateRateFromUserById(Integer filmId, Integer userId, Integer rate){
         Film film = filmStorage.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
         Map<String, Object> params = eventStorage.makeEvent(
                 (long)userId,
                 filmId,
-                "like",
+                "rate",
+                "update"
+        );
+        eventStorage.save(params);
+
+        return filmStorage.updateRateFromUserById(film.getId(), user.getId(), rate);
+    }
+    public Film removeRateFromUserById(Integer filmId, Integer userId){
+        Film film = filmStorage.getFilmById(filmId);
+        User user = userService.getUserById(userId);
+
+        Map<String, Object> params = eventStorage.makeEvent(
+                (long)userId,
+                filmId,
+                "rate",
                 "remove"
         );
         eventStorage.save(params);
 
-        return filmStorage.removeLikeFromUserById(film.getId(), user.getId());
+        return filmStorage.removeRateFromUserById(film.getId(), user.getId());
+    }
+    public Double getRateFilmById(Integer filmId) {
+        return filmStorage.getRateFilmById(filmId);
     }
     public List<Film> getMostPopularFilmByCountLikes(Integer count, Integer genreId, Year year){
-        return filmStorage.getMostPopularFilmByCountLikes(count, genreId, year);
-    }
-    public UserService getUserService() {
-        return userService;
+        return filmStorage.getMostPopularFilmByRate(count, genreId, year);
     }
     public List<Film> getSortedFilmByDirector(Integer directorId, String sortBy) {
         return filmStorage.getSortedFilmByDirector(directorId, sortBy);
     }
 
     public List<Film> findCommon (int userId, int friendId){
-        List<Film> common = filmStorage.findCommon(userId, friendId);
-        common.sort((o1, o2) -> o2.getLikes().size() - o1.getLikes().size());
-
-                return common;
+        return filmStorage.findCommon(userId, friendId);
     }
-
     public List<Film> searchFilm(String substring, String by) throws IllegalArgumentException {
         return filmStorage.searchFilms(substring, by);
     }
+    public UserService getUserService() {
+        return userService;
+    }
+
 }

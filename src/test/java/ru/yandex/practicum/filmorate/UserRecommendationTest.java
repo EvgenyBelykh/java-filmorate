@@ -51,7 +51,7 @@ public class UserRecommendationTest {
                         .id(1)
                         .name("G")
                         .build())
-        .build();
+                .build();
 
         Film testFilm3 = Film.builder()
                 .name("Titanic3")
@@ -91,24 +91,24 @@ public class UserRecommendationTest {
         assertThat(userOptional3).isPresent()
                 .hasValueSatisfying(user1 -> assertThat(user1.getLogin()).isEqualTo("Lol3"));
 
+
         //Проверка рекомендаций
 
-        daoFilmStorage.addLikeFromUserById(1, 1);
-        daoFilmStorage.addLikeFromUserById(2, 2);
+        daoFilmStorage.addRateFromUserById(3, 1, 6);
 
         Optional<List<Film>> emptyRecommendations = Optional.ofNullable(daoUserStorage.getRecommendations(1));
 
         assertThat(emptyRecommendations).isPresent()
                 .hasValueSatisfying(films -> assertThat(films.size()).isEqualTo(0));
 
-        daoFilmStorage.addLikeFromUserById(3, 1);
-        daoFilmStorage.addLikeFromUserById(3, 2);
-
+        daoFilmStorage.addRateFromUserById(3, 2, 4);
+        daoFilmStorage.addRateFromUserById(2, 2, 7);
+        daoFilmStorage.addRateFromUserById(1, 2, 9);
 
         Optional<List<Film>> recommendations = Optional.ofNullable(daoUserStorage.getRecommendations(1));
 
         assertThat(recommendations).isPresent()
-                .hasValueSatisfying(films -> assertThat(films.size()).isEqualTo(1));
+                .hasValueSatisfying(films -> assertThat(films.size()).isEqualTo(2));
 
     }
 }

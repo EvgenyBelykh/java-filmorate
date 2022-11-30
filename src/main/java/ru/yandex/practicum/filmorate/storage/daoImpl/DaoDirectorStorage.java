@@ -8,11 +8,12 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.EmptyResultFromDataBaseException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.models.Director;
 import ru.yandex.practicum.filmorate.models.Film;
 
-import java.sql.*;
-import java.time.LocalDate;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,14 +28,14 @@ public class DaoDirectorStorage {
 
     public List<Director> getAllDirector() {
         String sqlQuery = "SELECT * FROM DIRECTORS ";
-        return jdbcTemplate.query(sqlQuery, this::mapRowToDirector);
+        return jdbcTemplate.query(sqlQuery, new DirectorRowMapper());
     }
 
     public Director getDirectorById(Integer id) {
         String sqlQuery = "SELECT * FROM DIRECTORS WHERE id = ?";
         Director director;
         try {
-            director = jdbcTemplate.queryForObject(sqlQuery, this::mapRowToDirector, id);
+            director = jdbcTemplate.queryForObject(sqlQuery, new DirectorRowMapper(), id);
             return director;
         } catch (Exception e) {
             throw new EmptyResultFromDataBaseException("Режиссер c id: " + id + " не найден");
@@ -83,7 +84,7 @@ public class DaoDirectorStorage {
 
     public List<Director> getDirectorsByIdFilm(int id) {
         String sqlQuery = "SELECT * FROM DIRECTORS WHERE ID IN (SELECT ID_DIRECTOR FROM FILM_DIRECTORS WHERE ID_FILM = ?)";
-        return jdbcTemplate.query(sqlQuery, this::mapRowToDirector, id);
+        return jdbcTemplate.query(sqlQuery, new DirectorRowMapper(), id);
     }
 
     public void addOrUpdateFilmDirectors(Film film) {
@@ -98,12 +99,5 @@ public class DaoDirectorStorage {
             String sqlDirectors = "DELETE FROM FILM_DIRECTORS WHERE ID_FILM = ? ";
             jdbcTemplate.update(sqlDirectors, film.getId());
         }
-    }
-
-    private Director mapRowToDirector(ResultSet resultSet, int i) throws SQLException {
-        return Director.builder()
-                .id(resultSet.getInt("id"))
-                .name(resultSet.getString("name"))
-                .build();
     }
 }

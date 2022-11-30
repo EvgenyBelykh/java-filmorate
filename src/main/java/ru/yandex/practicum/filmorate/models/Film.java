@@ -37,9 +37,7 @@ public class Film {
             , message = "Неверные данные: Длительность меньше 0")
     private int duration;
 
-    private Set<Integer> likes = new HashSet<>();
-
-    private int rate;
+    private Double rate;
     private Mpa mpa;
     private List<Genre> genres;
     private List<Director> directors;

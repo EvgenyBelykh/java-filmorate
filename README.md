@@ -1,6 +1,6 @@
 # java-filmorate
 Template repository for Filmorate project.
-![diagram](https://github.com/EvgenyBelykh/java-filmorate/blob/main/filmorate%20(8).png)
+![diagram](https://github.com/EvgenyBelykh/java-filmorate/blob/replace-likes-to-rate/filmorate.png)
 
 ## Code from dbdiagram.io:
 
@@ -25,7 +25,7 @@ Table films as F {
   description varchar
   release_date timestamp
   duration int
-  rate int
+  rate double
   mpa varchar
 }
   
@@ -44,10 +44,10 @@ Table mpa {
   name mpa
 }
 
-Table likes {
-  id_user int [pk]
+Table rate {
   id_film int [pk]
   id_user int [pk]
+  rate int
 }
 
 Table users_friends{
@@ -93,8 +93,8 @@ Table review_like{
   review_id int
 }
 
-Ref: U.id < likes.id_user
-Ref: F.id < likes.id_film
+Ref: U.id < rate.id_user
+Ref: F.id < rate.id_film
 Ref: U.id < users_friends.id_user_one
 Ref: U.id < users_friends.id_user_two
 Ref: genres.id < film_genres.id_genre
