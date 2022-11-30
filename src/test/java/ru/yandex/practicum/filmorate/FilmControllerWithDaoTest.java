@@ -20,6 +20,7 @@ import java.time.Year;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,6 +32,12 @@ public class FilmControllerWithDaoTest {
     private final DaoFilmStorage filmStorage;
     private final DaoUserStorage userStorage;
     private final DaoDirectorStorage directorStorage;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(firstFilm);
+    }
+
     Film firstFilm;
     Film secondFilm;
     Film thirdFilm;
@@ -761,9 +768,22 @@ public class FilmControllerWithDaoTest {
                 .directors(new ArrayList<>())
                 .genres(new ArrayList<>())
                 .mpa(listMpa.get(1))
+                .rate(8.0)
                 .build();
 
         filmStorage.addFilm(firstFilm);
+
+        User firstUser = User.builder()
+                .email("jim@email.com")
+                .login("Jim")
+                .name("Джим")
+                .birthday(LocalDate.of(1962, 1, 17))
+                .build();
+        userStorage.addUser(firstUser);
+
+        filmStorage.addRateFromUserById(1,1,8);
+
+
         List<Film> result = filmStorage.searchFilms("catch", "title");
 
         assertTrue(result.contains(firstFilm));
@@ -788,9 +808,20 @@ public class FilmControllerWithDaoTest {
                 .mpa(listMpa.get(1))
                 .genres(new ArrayList<>())
                 .directors(listDirector)
+                .rate(8.0)
                 .build();
-
         filmStorage.addFilm(firstFilm);
+
+        User firstUser = User.builder()
+                .email("jim@email.com")
+                .login("Jim")
+                .name("Джим")
+                .birthday(LocalDate.of(1962, 1, 17))
+                .build();
+        userStorage.addUser(firstUser);
+
+        filmStorage.addRateFromUserById(1,1,8);
+
         List<Film> result = filmStorage.searchFilms("ДжеймсКамерун", "director");
 
         assertTrue(result.contains(firstFilm));
@@ -813,12 +844,22 @@ public class FilmControllerWithDaoTest {
                 .duration(101)
                 .name("Маска")
                 .mpa(listMpa.get(1))
-                .rate(3.14)
+                .rate(8.0)
                 .genres(new ArrayList<>())
                 .directors(listDirector)
                 .build();
-
         filmStorage.addFilm(firstFilm);
+
+        User firstUser = User.builder()
+                .email("jim@email.com")
+                .login("Jim")
+                .name("Джим")
+                .birthday(LocalDate.of(1962, 1, 17))
+                .build();
+        userStorage.addUser(firstUser);
+
+        filmStorage.addRateFromUserById(1,1,8);
+
         List<Film> result1 = filmStorage.searchFilms("ДжеймсКамерун", "director,title");
         List<Film> result2 = filmStorage.searchFilms("Маска", "title,director");
 
@@ -844,11 +885,22 @@ public class FilmControllerWithDaoTest {
                 .duration(101)
                 .name("ДжеймсКамерун")
                 .mpa(listMpa.get(1))
+                .rate(8.0)
                 .genres(new ArrayList<>())
                 .directors(listDirector)
                 .build();
-
         filmStorage.addFilm(firstFilm);
+
+        User firstUser = User.builder()
+                .email("jim@email.com")
+                .login("Jim")
+                .name("Джим")
+                .birthday(LocalDate.of(1962, 1, 17))
+                .build();
+        userStorage.addUser(firstUser);
+
+        filmStorage.addRateFromUserById(1,1,8);
+
         List<Film> result = filmStorage.searchFilms("Джеймс", "director,title");
 
         assertTrue(result.contains(firstFilm));

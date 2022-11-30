@@ -334,8 +334,8 @@ public class DaoFilmStorage implements FilmStorage {
                 "LEFT OUTER JOIN film_directors AS fd ON f.id = fd.id_film " +
                 "LEFT OUTER JOIN directors AS d ON fd.id_director = d.id " +
                 "WHERE " + getInsertString(substring, by) + " " +
-                "GROUP BY f.id " +
-                "ORDER BY COUNT(f.rate) DESC;";
+                "GROUP BY f.rate " +
+                "ORDER BY f.rate DESC;";
         Set<Film> films = new HashSet<>(jdbcTemplate.query(sql, new FilmRowMapper(mpaService, genreService, directorService, jdbcTemplate)));
         List<Film> result = new ArrayList<>(films);
         result.sort(Comparator.comparingDouble(Film::getRate));
