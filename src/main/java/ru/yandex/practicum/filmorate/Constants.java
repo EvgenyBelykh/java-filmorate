@@ -35,4 +35,20 @@ public class Constants {
     public static final String UPDATE_REVIEW_AFTER_ADD_DISLIKE = "UPDATE reviews r1 SET useful = -1 WHERE review_id = ?";
 
     public static final String UPDATE_REVIEW_AFTER_ADD_LIKE = "UPDATE reviews r1 SET useful = ((SELECT r2.useful FROM reviews r2 WHERE r1.review_id = r2.review_id) + 1) WHERE review_id = ?";
+
+    public static final String SQL_GET_RECOMMENDATIONS = "SELECT * FROM FILMS film " +
+            "WHERE film.rate > 5 AND film.ID IN " +
+            "(SELECT rate.ID_FILM  FROM RATE rate " +
+            "WHERE rate.ID_USER IN " +
+            "(SELECT ID_USER FROM RATE l " +
+            "WHERE l.ID_USER != ? " +
+            "AND " +
+            "l.ID_FILM IN " +
+            "(SELECT l.ID_FILM FROM RATE l " +
+            "WHERE l.ID_USER = ?)" +
+            ") " +
+            "GROUP BY rate.ID_FILM " +
+            "HAVING rate.ID_FILM NOT IN " +
+            "(SELECT l.ID_FILM FROM RATE l WHERE l.ID_USER = ?)" +
+            ")";
 }
